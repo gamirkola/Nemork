@@ -1,8 +1,11 @@
 from scapy.all import *
 from scapy.utils import PcapWriter
-from pynput import keyboard
+import keyboard
 from mitmproxy import *
 import threading
+from packettotal_sdk import packettotal_api, search_tools
+import requests
+
 
 load_layer("http")
 
@@ -11,6 +14,7 @@ load_layer("http")
 def show_packet(packet):
     if packet:
         packet.show()
+
 
 class MitmSniffer:
     
@@ -28,15 +32,15 @@ class MitmSniffer:
 
     # scrittore di file pcap
     def pcap_generator(self):
-        pktdump = PcapWriter(self.file_name, append=True, sync=True)
-        pktdump.write(self.pkts)
+        for i in self.pkts:
+            wrpcap(self.file_name, i, append=True)
 
     # aggiunge un pacchetto alla lista di paccheti dello sniffer
     def packet_append(self, packet):
         show_packet(packet)
         self.pkts.append(packet)
 
-    def sniff(self):
+    def sniffer(self):
         self.pkts=sniff(filter=self.filter, iface=self.interface, prn=self.packet_append)
     
     def on_press(self, key):
@@ -44,24 +48,36 @@ class MitmSniffer:
             self.break_program = True
             return False
 
-    def stop_sniffing(self):
-        with keyboard.Listener(on_press=self.on_press) as listener:
-            if self.break_program:
-                self.sniffing._running = False
-            listener.join()
-        self.pcap_generator()
-        
-    # sniffing function
     def start_sniffing(self):
         print("press 'Q' to quit")
-        self.sniffing = threading.Thread(target=self.sniff, args=(), daemon=True)
+        self.sniffing = threading.Thread(target=self.sniffer, args=(), daemon=True)
         self.sniffing.start()
-        quit = threading.Thread(target=self.stop_sniffing, args=(), daemon=True)
-        quit.start()
-        quit.join()
-        print("Grazie per avere sniffato con me ;)")
-        
-        
-            
+        while True:
+            try:
+                if keyboard.is_pressed('q'):
+                    print("Grazie per avere sniffato con me ;)")
+                    self.sniffing._running = False
+                    self.pcap_generator()
+                    break
+                else:
+                    pass
+            except:
+                pass
 
+    def packets_analysis(self):
+        api = search_tools.SearchTools('3d8201de3cef2b440e49644416fb0349')
+        analysis = api.analyze(open('./'+self.file_name, 'rb'), pcap_name='test.pcap')
+        print(analysis.status_code, analysis.json())
+        # response = analysis.json()
+        # pcap_id = response['id']
+        # headers = {
+        #     'x-api-key': '<3d8201de3cef2b440e49644416fb0349>',
+        # }
+        #
+        # res = requests.get('https://api.packettotal.com/v1/pcaps/'+pcap_id+'/analysis', headers=headers)
+        # print(pcap_id, res)
+
+        response = api.search_by_pcap(open('test.pcap', 'rb'))
+
+        print(response.status_code, response.json())
     

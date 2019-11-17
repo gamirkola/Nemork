@@ -2,8 +2,9 @@ from scapy.all import *
 from scapy.utils import PcapWriter
 import keyboard
 from mitmproxy import *
-import threading
+from multiprocessing import *
 from packettotal_sdk import packettotal_api, search_tools
+from tqdm import tqdm
 import requests
 
 
@@ -22,8 +23,6 @@ class MitmSniffer:
     interface = ""
     file_name = ""
     pkts = []
-    break_program = False
-    sniffing = threading.Thread()
 
     def __init__(self, filter, interface, file_name):
         self.filter = filter
@@ -32,8 +31,13 @@ class MitmSniffer:
 
     # scrittore di file pcap
     def pcap_generator(self):
-        for i in self.pkts:
-            wrpcap(self.file_name, i, append=True)
+        print("generazione file --> "+ self.file_name +":")
+        try:
+            for i in tqdm(self.pkts):
+                wrpcap(self.file_name, i, append=True)
+            return True
+        except:
+            return False
 
     # aggiunge un pacchetto alla lista di paccheti dello sniffer
     def packet_append(self, packet):
@@ -41,28 +45,25 @@ class MitmSniffer:
         self.pkts.append(packet)
 
     def sniffer(self):
-        self.pkts=sniff(filter=self.filter, iface=self.interface, prn=self.packet_append)
-    
-    def on_press(self, key):
-        if str(key) == "'q'":
-            self.break_program = True
-            return False
+        sn = sniff(filter=self.filter, iface=self.interface, prn=self.packet_append)
 
     def start_sniffing(self):
         print("press 'Q' to quit")
-        self.sniffing = threading.Thread(target=self.sniffer, args=(), daemon=True)
-        self.sniffing.start()
+        self.pkts = Manager().list()
+        sniffing = Process(target=self.sniffer, args=self.pkts)
+        sniffing.start()
         while True:
             try:
                 if keyboard.is_pressed('q'):
                     print("Grazie per avere sniffato con me ;)")
-                    self.sniffing._running = False
+                    sniffing.terminate()
                     self.pcap_generator()
                     break
                 else:
                     pass
             except:
                 pass
+
 
     def packets_analysis(self):
         api = search_tools.SearchTools('3d8201de3cef2b440e49644416fb0349')

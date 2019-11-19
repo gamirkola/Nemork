@@ -52,7 +52,7 @@ class MitmSniffer:
         sn = sniff(filter=self.filter, iface=self.interface, prn=self.packet_append)
 
     def start_sniffing(self):
-        print("press 'Q' to quit", API_KEY)
+        print("press 'Q' to quit")
         self.pkts = Manager().list()
         sniffing = Process(target=self.sniffer, args=self.pkts)
         sniffing.start()
@@ -71,16 +71,8 @@ class MitmSniffer:
 
     def packets_analysis(self):
         api = search_tools.SearchTools(API_KEY)
-        analysis = api.analyze(open('./'+self.file_name, 'rb'), pcap_name='test.pcap')
+        analysis = api.analyze(open('./'+self.file_name, 'rb'), pcap_name='testo.pcap')
         print(analysis.status_code, analysis.json())
-        # response = analysis.json()
-        # pcap_id = response['id']
-        # headers = {
-        #     'x-api-key': '<3d8201de3cef2b440e49644416fb0349>',
-        # }
-        #
-        # res = requests.get('https://api.packettotal.com/v1/pcaps/'+pcap_id+'/analysis', headers=headers)
-        # print(pcap_id, res)
 
         response = api.search_by_pcap(open('test.pcap', 'rb'))
 

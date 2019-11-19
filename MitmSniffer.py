@@ -6,9 +6,13 @@ from multiprocessing import *
 from packettotal_sdk import packettotal_api, search_tools
 from tqdm import tqdm
 import requests
+import os
+import settings
 
 
 load_layer("http")
+
+API_KEY = os.getenv("API_KEY")
 
 
 # funzione che probabilmente andrà a mostrare anche più dettagliatamente i pacchetti
@@ -48,7 +52,7 @@ class MitmSniffer:
         sn = sniff(filter=self.filter, iface=self.interface, prn=self.packet_append)
 
     def start_sniffing(self):
-        print("press 'Q' to quit")
+        print("press 'Q' to quit", API_KEY)
         self.pkts = Manager().list()
         sniffing = Process(target=self.sniffer, args=self.pkts)
         sniffing.start()
@@ -66,7 +70,7 @@ class MitmSniffer:
 
 
     def packets_analysis(self):
-        api = search_tools.SearchTools('3d8201de3cef2b440e49644416fb0349')
+        api = search_tools.SearchTools(API_KEY)
         analysis = api.analyze(open('./'+self.file_name, 'rb'), pcap_name='test.pcap')
         print(analysis.status_code, analysis.json())
         # response = analysis.json()

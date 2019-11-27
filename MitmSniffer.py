@@ -59,6 +59,7 @@ class MitmSniffer:
     def sniffer(self):
         sn = sniff(filter=self.filter, iface=self.interface, prn=self.packet_append)
 
+    '''start the real mitm using mitmproxy'''
     def mitm_sniffer(self):
         # os.system("export MITMPROXY_SSLKEYLOGFILE=/home/mirko/.mitmproxy/sslnemork.log")
         #sslkeylog.set_keylog('mitmproxykey.log')

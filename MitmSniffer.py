@@ -25,9 +25,11 @@ def show_packet(packet):
 '''terminal command send function'''
 def send_cmd(cmd):
     if cmd and cmd != None:
-        p = subprocess.Popen(cmd, shell=True, executable='/bin/bash', stdout=subprocess.PIPE)
-        out, err = p.communicate()
-        return out, err
+        try:
+            subprocess.check_output(cmd, shell=True, executable='/bin/bash')
+            return True
+        except (subprocess.CalledProcessError, subprocess.OSerror):
+            return False
     else:
         return False
 
@@ -55,16 +57,15 @@ class MitmSniffer:
         show_packet(packet)
         self.pkts.append(packet)
 
-     '''verify the network options'''
-    def net_opt(self):
+    '''verify the network options'''
+    def set_net_opt(self):
         enable_ip_forwarding = "sysctl -w net.ipv4.ip_forward=1"
-        send_cmd(enable_ip_forwarding)
-
-        nat_port_80 = "iptables -t nat -A PREROUTING -i" + self.interface + "-p tcp --dport 80 -j REDIRECT --to-port 8080"
-        send_cmd(nat_port_80)
-
-        nat_port_443 = "iptables -t nat -A PREROUTING -i" + self.interface + "-p tcp --dport 443 -j REDIRECT --to-port 8080"
-        send_cmd(nat_port_443)
+        nat_port_80 = "iptables -t nat -A PREROUTING -i " + self.interface + " -p tcp --dport 80 -j REDIRECT --to-port 8080"
+        nat_port_443 = "iptables -t nat -A PREROUTING -i " + self.interface + " -p tcp --dport 443 -j REDIRECT --to-port 8080"
+        if send_cmd(enable_ip_forwarding) and send_cmd(nat_port_80) and send_cmd(nat_port_443):
+            return "Net options applied successfully!"
+        else:
+            return "Sorry, the program has some problems in setting up the propers network options!"
 
     '''sniff the all the specified packet with scapy sniff function'''
     def sniffer(self):
@@ -76,7 +77,7 @@ class MitmSniffer:
         #sslkeylog.set_keylog('mitmproxykey.log')
 
         # set the proper net options
-        self.net_opt()
+        print(self.set_net_opt())
 
         cmd = 'export SSLKEYLOGFILE="/home/mirko/.mitmproxy/sslkeylogfile.txt"'
         send_cmd(cmd)
@@ -104,7 +105,7 @@ class MitmSniffer:
         while True:
             try:
                 if keyboard.is_pressed('q'):
-                    print("Grazie per avere sniffato con me ;)")
+                    print("Thanks for sniffing with me ;)")
                     sniffing.terminate()
                     mitm_sniff.terminate()
                     self.pcap_generator()
@@ -114,7 +115,7 @@ class MitmSniffer:
             except:
                 pass
 
-    '''fnction that analyzes with various api the pcap file'''
+    '''function that analyzes with various api the pcap file'''
     def packets_analysis(self):
         api = PacketTotalApi(API_KEY)
 

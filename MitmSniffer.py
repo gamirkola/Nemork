@@ -26,7 +26,9 @@ def show_packet(packet):
 def send_cmd(cmd):
     if cmd and cmd != None:
         try:
-            subprocess.check_output(cmd, shell=True, executable='/bin/bash')
+            out = subprocess.check_output(cmd, shell=True, executable='/bin/bash').decode('utf-8')
+            if out.strip():
+                print(out)
             return True
         except (subprocess.CalledProcessError, subprocess.OSerror):
             return False
@@ -60,6 +62,7 @@ class MitmSniffer:
     '''verify the network options'''
     def set_net_opt(self):
         enable_ip_forwarding = "sysctl -w net.ipv4.ip_forward=1"
+        print("Setting up iptables")
         nat_port_80 = "iptables -t nat -A PREROUTING -i " + self.interface + " -p tcp --dport 80 -j REDIRECT --to-port 8080"
         nat_port_443 = "iptables -t nat -A PREROUTING -i " + self.interface + " -p tcp --dport 443 -j REDIRECT --to-port 8080"
         if send_cmd(enable_ip_forwarding) and send_cmd(nat_port_80) and send_cmd(nat_port_443):
@@ -79,7 +82,7 @@ class MitmSniffer:
         # set the proper net options
         print(self.set_net_opt())
 
-        cmd = 'export SSLKEYLOGFILE="/home/mirko/.mitmproxy/sslkeylogfile.txt"'
+        cmd = 'SSLKEYLOGFILE="/home/mirko/.mitmproxy/sslkeylogfile.txt"'
         send_cmd(cmd)
 
         ''' start mitmproxy for collecting as mitm http and https traffic with the related keys'''

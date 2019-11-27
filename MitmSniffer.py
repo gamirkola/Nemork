@@ -55,6 +55,17 @@ class MitmSniffer:
         show_packet(packet)
         self.pkts.append(packet)
 
+     '''verify the network options'''
+    def net_opt(self):
+        enable_ip_forwarding = "sysctl -w net.ipv4.ip_forward=1"
+        send_cmd(enable_ip_forwarding)
+
+        nat_port_80 = "iptables -t nat -A PREROUTING -i" + self.interface + "-p tcp --dport 80 -j REDIRECT --to-port 8080"
+        send_cmd(nat_port_80)
+
+        nat_port_443 = "iptables -t nat -A PREROUTING -i" + self.interface + "-p tcp --dport 443 -j REDIRECT --to-port 8080"
+        send_cmd(nat_port_443)
+
     '''sniff the all the specified packet with scapy sniff function'''
     def sniffer(self):
         sn = sniff(filter=self.filter, iface=self.interface, prn=self.packet_append)
@@ -63,6 +74,9 @@ class MitmSniffer:
     def mitm_sniffer(self):
         # os.system("export MITMPROXY_SSLKEYLOGFILE=/home/mirko/.mitmproxy/sslnemork.log")
         #sslkeylog.set_keylog('mitmproxykey.log')
+
+        # set the proper net options
+        self.net_opt()
 
         cmd = 'export SSLKEYLOGFILE="/home/mirko/.mitmproxy/sslkeylogfile.txt"'
         send_cmd(cmd)

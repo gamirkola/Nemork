@@ -3,24 +3,27 @@ import keyboard
 from mitmproxy import proxy, options
 from mitmproxy.tools.dump import DumpMaster
 from multiprocessing import *
-from packettotal_sdk.packettotal_api import PacketTotalApi
+from packettotal_sdk.search_tools import SearchTools
 from tqdm import tqdm
 import os
 import settings
 import json
 from pathlib import Path
 import sslkeylog
+import requests
 
 
 load_layer("http")
 
-API_KEY = os.getenv("API_KEY")
+API_KEY_PACKET_TOTAL = os.getenv("API_KEY_PACKET_TOTAL")
+API_KEY_VIRUS_TOTAL = os.getenv("API_KEY_VIRUS_TOTAL")
 
 
 '''function that shaw the packet, maybe it will be modified'''
 def show_packet(packet):
     if packet:
         packet.show()
+
 
 '''terminal command send function'''
 def send_cmd(cmd):
@@ -36,6 +39,14 @@ def send_cmd(cmd):
         return False
 
 
+def json_writer(file_name, json_obj):
+    if file_name.find(".json") == -1:
+        file_name.append(".json")
+
+    with open(file_name, 'w') as outfile:
+        json.dump(json_obj.json(), outfile, indent=4, sort_keys=True)
+        return True
+
 class MitmSniffer:
 
     def __init__(self, filter, interface, file_name):
@@ -44,7 +55,7 @@ class MitmSniffer:
         self.file_name = file_name
         self.pkts = []
 
-    # scrittore di file pcap
+    '''func that creates a pcap with the internal pkt list'''
     def pcap_generator(self):
         print("generazione file --> "+ self.file_name +":")
         try:
@@ -54,15 +65,16 @@ class MitmSniffer:
         except:
             return False
 
-    '''add a packet to the program list'''
+    '''add a packet to the program list and show it'''
     def packet_append(self, packet):
         show_packet(packet)
         self.pkts.append(packet)
 
-    '''verify the network options'''
+    '''verify and set the network options'''
     def set_net_opt(self):
+        print("Enabling ip forwarding...")
         enable_ip_forwarding = "sysctl -w net.ipv4.ip_forward=1"
-        print("Setting up iptables")
+        print("Setting up iptables...")
         nat_port_80 = "iptables -t nat -A PREROUTING -i " + self.interface + " -p tcp --dport 80 -j REDIRECT --to-port 8080"
         nat_port_443 = "iptables -t nat -A PREROUTING -i " + self.interface + " -p tcp --dport 443 -j REDIRECT --to-port 8080"
         if send_cmd(enable_ip_forwarding) and send_cmd(nat_port_80) and send_cmd(nat_port_443):
@@ -118,19 +130,30 @@ class MitmSniffer:
             except:
                 pass
 
-    '''function that analyzes with various api the pcap file'''
+    '''function that analyzes with various api the pcap file creating a json'''
     def packets_analysis(self):
-        api = PacketTotalApi(API_KEY)
 
-        upload = api.analyze(pcap_file_obj=open('./'+self.file_name, 'rb'), pcap_name=self.file_name)
-        print(upload.status_code, upload.json())
-        id = upload.json()['id']
-        print("pcap_md5: ", id)
-        analysis = api.pcap_analysis(id)
+        '''I'VE COMMENTED THIS BECOUSE AT THE MOMENT THE PACKET TOTAL API ARE NOT WORKING PROPERLY'''
+        # api_packet_total = SearchTools(API_KEY_PACKET_TOTAL)
+        #
+        # upload = api_packet_total.search_by_pcap(pcap_file_obj=open(self.file_name, 'rb'))
+        # print(upload.status_code, upload.json())
 
-        print(analysis.status_code, analysis.json())
-        with open('data.json', 'w') as outfile:
-            json.dump(analysis.json(), outfile, indent=4, sort_keys=True)
+        '''VIRUS TOTAL API'''
+        url = 'https://www.virustotal.com/vtapi/v2/file/scan'
+
+        params = {'apikey': API_KEY_VIRUS_TOTAL}
+
+        files = {'file': (self.file_name, open(self.file_name, 'rb'))}
+
+        response = requests.post(url, files=files, params=params)
+
+        print(response.json())
+
+
+
+
+
 
 
 

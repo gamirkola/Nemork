@@ -1,7 +1,7 @@
 import os
 import json
 import typing
-import base64
+import pybase64
 import requests
 
 PT_API_BASE = os.environ.get('PACKETTOTAL_API_BASE_URL')
@@ -38,7 +38,7 @@ class PacketTotalApi:
         :param pcap_sources: The optional list of URLs referencing making reference to the PCAP file
         :return: A request.Response instance, containing information such as where the finished analysis can be found
         """
-        pcap_base64 = base64.b64encode(pcap_file_obj.read())
+        pcap_base64 = pybase64.b64encode(pcap_file_obj.read())
         pcap_base64 = pcap_base64.decode('utf-8')
 
         self.headers['Content-Type'] = 'application/json'
@@ -57,6 +57,7 @@ class PacketTotalApi:
             headers=self.headers,
             data=json.dumps(body)
         )
+        print(response.json())
         return response
 
     def search(self, query: str, pretty=False) -> requests.Response:

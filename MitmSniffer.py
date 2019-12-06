@@ -12,20 +12,22 @@ from pathlib import Path
 import sslkeylog
 import requests
 
-
 load_layer("http")
 
 API_KEY_PACKET_TOTAL = os.getenv("API_KEY_PACKET_TOTAL")
 API_KEY_VIRUS_TOTAL = os.getenv("API_KEY_VIRUS_TOTAL")
 
-
 '''function that shaw the packet, maybe it will be modified'''
+
+
 def show_packet(packet):
     if packet:
         packet.show()
 
 
 '''terminal command send function'''
+
+
 def send_cmd(cmd):
     if cmd and cmd != None:
         try:
@@ -39,13 +41,17 @@ def send_cmd(cmd):
         return False
 
 
+'''write a json obj with the given filename'''
+
+
 def json_writer(file_name, json_obj):
     if file_name.find(".json") == -1:
-        file_name.append(".json")
+        file_name = file_name + ".json"
 
     with open(file_name, 'w') as outfile:
-        json.dump(json_obj.json(), outfile, indent=4, sort_keys=True)
+        json.dump(json_obj, outfile, indent=4, sort_keys=True)
         return True
+
 
 class MitmSniffer:
 
@@ -56,8 +62,9 @@ class MitmSniffer:
         self.pkts = []
 
     '''func that creates a pcap with the internal pkt list'''
+
     def pcap_generator(self):
-        print("generazione file --> "+ self.file_name +":")
+        print("file generation --> {}:".format(self.file_name))
         try:
             for i in tqdm(self.pkts):
                 wrpcap(self.file_name, i, append=True)
@@ -65,12 +72,31 @@ class MitmSniffer:
         except:
             return False
 
+    '''general method used to query virustotal API, at the moment only two request are implemented'''
+
+    def vt_sender(self, request_type='scan', additional_params=None):
+        url = 'https://www.virustotal.com/vtapi/v2/file/'
+        params = {'apikey': API_KEY_VIRUS_TOTAL}
+        response = None
+        if request_type != 'scan':
+            if request_type == 'report':
+                url = url + request_type
+                params['resource'] = additional_params['resource']
+                response = requests.get(url, params=params)
+        else:
+            url = url + 'scan'
+            files = {'file': (self.file_name, open(self.file_name, 'rb'))}
+            response = requests.post(url, files=files, params=params)
+        return response
+
     '''add a packet to the program list and show it'''
+
     def packet_append(self, packet):
         show_packet(packet)
         self.pkts.append(packet)
 
     '''verify and set the network options'''
+
     def set_net_opt(self):
         print("Enabling ip forwarding...")
         enable_ip_forwarding = "sysctl -w net.ipv4.ip_forward=1"
@@ -83,13 +109,15 @@ class MitmSniffer:
             return "Sorry, the program has some problems in setting up the propers network options!"
 
     '''sniff the all the specified packet with scapy sniff function'''
+
     def sniffer(self):
         sn = sniff(filter=self.filter, iface=self.interface, prn=self.packet_append)
 
     '''start the real mitm using mitmproxy'''
+
     def mitm_sniffer(self):
         # os.system("export MITMPROXY_SSLKEYLOGFILE=/home/mirko/.mitmproxy/sslnemork.log")
-        #sslkeylog.set_keylog('mitmproxykey.log')
+        # sslkeylog.set_keylog('mitmproxykey.log')
 
         # set the proper net options
         print(self.set_net_opt())
@@ -131,6 +159,7 @@ class MitmSniffer:
                 pass
 
     '''function that analyzes with various api the pcap file creating a json'''
+
     def packets_analysis(self):
 
         '''I'VE COMMENTED THIS BECOUSE AT THE MOMENT THE PACKET TOTAL API ARE NOT WORKING PROPERLY'''
@@ -140,21 +169,16 @@ class MitmSniffer:
         # print(upload.status_code, upload.json())
 
         '''VIRUS TOTAL API'''
-        url = 'https://www.virustotal.com/vtapi/v2/file/scan'
+        upload = self.vt_sender()
+        print(upload.json())
+        json_writer("virus_total_upload_info", upload.json())
 
-        params = {'apikey': API_KEY_VIRUS_TOTAL}
+        time.sleep(10)
+        print("Please wait for the file report!")
 
-        files = {'file': (self.file_name, open(self.file_name, 'rb'))}
+        report = self.vt_sender('report', upload.json())
+        print(report.json())
+        json_writer("virus_total_report", report.json())
 
-        response = requests.post(url, files=files, params=params)
-
-        print(response.json())
-
-
-
-
-
-
-
-
-    
+        packet_list = rdpcap(self.file_name)
+        print(packet_list)

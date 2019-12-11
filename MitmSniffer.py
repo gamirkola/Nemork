@@ -1,3 +1,4 @@
+from kamene.all import *
 from scapy.all import *
 import keyboard
 from mitmproxy import proxy, options
@@ -11,11 +12,15 @@ import json
 from pathlib import Path
 import sslkeylog
 import requests
+import pyx
+import shodan
+import pickle
 
 load_layer("http")
 
 API_KEY_PACKET_TOTAL = os.getenv("API_KEY_PACKET_TOTAL")
 API_KEY_VIRUS_TOTAL = os.getenv("API_KEY_VIRUS_TOTAL")
+API_KEY_SHODAN = os.getenv("API_KEY_SHODAN")
 
 '''function that shaw the packet, maybe it will be modified'''
 
@@ -82,6 +87,7 @@ class MitmSniffer:
             if request_type == 'report':
                 url = url + request_type
                 params['resource'] = additional_params['resource']
+                params['allinfo'] = 'true'
                 response = requests.get(url, params=params)
         else:
             url = url + 'scan'
@@ -89,7 +95,18 @@ class MitmSniffer:
             response = requests.post(url, files=files, params=params)
         return response
 
-    '''add a packet to the program list and show it'''
+    '''general method used to query shodan API'''
+
+    def shodan_sender(self):
+        api_shodan = shodan.Shodan(API_KEY_SHODAN)
+
+
+    '''function that will be used to exctract relevant data from the given research'''
+
+    def evidence_extractor(self, data):
+
+
+     '''add a packet to the program list and show it'''
 
     def packet_append(self, packet):
         show_packet(packet)
@@ -134,6 +151,7 @@ class MitmSniffer:
 
         m.run()
 
+
     def start_sniffing(self):
         print("press 'Q' to quit sniffing")
 
@@ -142,9 +160,8 @@ class MitmSniffer:
         sniffing = Process(target=self.sniffer, args=self.pkts)
         sniffing.start()
 
-        mitm_sniff = Process(target=self.mitm_sniffer)
+        mitm_sniff = Process(target=self.mitm_sniffer, args=self.pkts)
         mitm_sniff.start()
-
         while True:
             try:
                 if keyboard.is_pressed('q'):
@@ -173,12 +190,19 @@ class MitmSniffer:
         print(upload.json())
         json_writer("virus_total_upload_info", upload.json())
 
-        time.sleep(10)
         print("Please wait for the file report!")
+        time.sleep(35)
 
         report = self.vt_sender('report', upload.json())
         print(report.json())
         json_writer("virus_total_report", report.json())
 
-        packet_list = rdpcap(self.file_name)
-        print(packet_list)
+        '''evidence extractor'''
+
+        '''SHODAN API'''
+
+
+
+        # with PcapReader(self.file_name) as packet_list:
+        #     for i, pkt in tqdm(enumerate(packet_list)):
+        #         pkt.pdfdump("./pktdumps/dump{}".format(i))

@@ -27,7 +27,7 @@ API_KEY_SHODAN = os.getenv("API_KEY_SHODAN")
 
 def show_packet(packet):
     if packet:
-        packet.show()
+        packet.summary()
 
 
 '''terminal command send function'''
@@ -101,7 +101,7 @@ class MitmSniffer:
         api_shodan = shodan.Shodan(API_KEY_SHODAN)
 
 
-    '''function that will be used to exctract relevant data from the given research'''
+    '''function used to exctract relevant data from the given research'''
 
     def evidence_extractor(self, data):
 
@@ -187,15 +187,22 @@ class MitmSniffer:
 
         '''VIRUS TOTAL API'''
         upload = self.vt_sender()
-        print(upload.json())
         json_writer("virus_total_upload_info", upload.json())
 
-        print("Please wait for the file report!")
-        time.sleep(35)
-
-        report = self.vt_sender('report', upload.json())
-        print(report.json())
-        json_writer("virus_total_report", report.json())
+        if upload.json()['response_code'] == 1:
+            print((upload.json()['verbose_msg']).partition(',')[0] + "\nPlease wait for the file report!")
+            report = self.vt_sender('report', upload.json())
+            scan_started = time.time()
+            while report.json()['response_code'] != 1:
+                report = self.vt_sender('report', upload.json())
+                '''added sleep for preventing dos'''
+                time.sleep(5)
+                now = time.time()
+                print("Analyzing ({0})s".format(str(now - scan_started).partition('.')[0]), end='\r')
+            print(report.json()['verbose_msg'] + ", check in the program folder for complete report!")
+            json_writer("virus_total_report", report.json())
+        else:
+            print(upload.json()['verbose_msg'])
 
         '''evidence extractor'''
 

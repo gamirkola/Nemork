@@ -27,7 +27,7 @@ API_KEY_SHODAN = os.getenv("API_KEY_SHODAN")
 
 def show_packet(packet):
     if packet:
-        packet.summary()
+        packet.show()
 
 
 '''terminal command send function'''
@@ -86,7 +86,7 @@ class MitmSniffer:
         if request_type != 'scan':
             if request_type == 'report':
                 url = url + request_type
-                params['resource'] = additional_params['resource']
+                params['resource'] = additional_params['scan_id']
                 params['allinfo'] = 'true'
                 response = requests.get(url, params=params)
         else:
@@ -104,9 +104,20 @@ class MitmSniffer:
     '''function used to exctract relevant data from the given research'''
 
     def evidence_extractor(self, data):
+        evidence = {}
+        if 'additional_info' in data:
+            if data.get('additional_info').get('embedded_domains') is not None:
+                for i, val in enumerate(data.get('additional_info').get('embedded_domains')):
+                    evidence['domain' + str(i)] = val
+            if data.get('additional_info').get('embedded_ips') is not None:
+                for i, val in enumerate(data.get('additional_info').get('embedded_ips')):
+                    evidence['ip' + str(i)] = val
+            if data.get('additional_info').get('wireshark').get('dns') is not None:
+                for i, val in enumerate(data.get('additional_info').get('wireshark').get('dns')):
+                    evidence['dns' + str(i)] = val[0]
+        return evidence
 
-
-     '''add a packet to the program list and show it'''
+    '''add a packet to the program list and show it'''
 
     def packet_append(self, packet):
         show_packet(packet)
@@ -188,15 +199,12 @@ class MitmSniffer:
         '''VIRUS TOTAL API'''
         upload = self.vt_sender()
         json_writer("virus_total_upload_info", upload.json())
-
         if upload.json()['response_code'] == 1:
             print((upload.json()['verbose_msg']).partition(',')[0] + "\nPlease wait for the file report!")
             report = self.vt_sender('report', upload.json())
             scan_started = time.time()
             while report.json()['response_code'] != 1:
                 report = self.vt_sender('report', upload.json())
-                '''added sleep for preventing dos'''
-                time.sleep(5)
                 now = time.time()
                 print("Analyzing ({0})s".format(str(now - scan_started).partition('.')[0]), end='\r')
             print(report.json()['verbose_msg'] + ", check in the program folder for complete report!")
@@ -205,7 +213,8 @@ class MitmSniffer:
             print(upload.json()['verbose_msg'])
 
         '''evidence extractor'''
-
+        evidence = self.evidence_extractor(report.json())
+        print (evidence)
         '''SHODAN API'''
 
 

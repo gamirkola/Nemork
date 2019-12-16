@@ -15,11 +15,11 @@ import requests
 import pyx
 import shodan
 import pickle
+from VirusTotalApi import VirusTotalApi
 
 load_layer("http")
 
 API_KEY_PACKET_TOTAL = os.getenv("API_KEY_PACKET_TOTAL")
-API_KEY_VIRUS_TOTAL = os.getenv("API_KEY_VIRUS_TOTAL")
 API_KEY_SHODAN = os.getenv("API_KEY_SHODAN")
 
 '''function that shaw the packet, maybe it will be modified'''
@@ -77,24 +77,6 @@ class MitmSniffer:
         except:
             return False
 
-    '''general method used to query virustotal API, at the moment only two request are implemented'''
-
-    def vt_sender(self, request_type='scan', additional_params=None):
-        url = 'https://www.virustotal.com/vtapi/v2/file/'
-        params = {'apikey': API_KEY_VIRUS_TOTAL}
-        response = None
-        if request_type != 'scan':
-            if request_type == 'report':
-                url = url + request_type
-                params['resource'] = additional_params['scan_id']
-                params['allinfo'] = 'true'
-                response = requests.get(url, params=params)
-        else:
-            url = url + 'scan'
-            files = {'file': (self.file_name, open(self.file_name, 'rb'))}
-            response = requests.post(url, files=files, params=params)
-        return response
-
     '''general method used to query shodan API'''
 
     def shodan_sender(self):
@@ -112,9 +94,10 @@ class MitmSniffer:
             if data.get('additional_info').get('embedded_ips') is not None:
                 for i, val in enumerate(data.get('additional_info').get('embedded_ips')):
                     evidence['ip' + str(i)] = val
-            if data.get('additional_info').get('wireshark').get('dns') is not None:
-                for i, val in enumerate(data.get('additional_info').get('wireshark').get('dns')):
-                    evidence['dns' + str(i)] = val[0]
+            if data.get('additional_info').get('wireshark') is not None:
+                if data.get('additional_info').get('wireshark').get('dns') is not None:
+                    for i, val in enumerate(data.get('additional_info').get('wireshark').get('dns')):
+                        evidence['dns' + str(i)] = val[0]
         return evidence
 
     '''add a packet to the program list and show it'''
@@ -197,14 +180,16 @@ class MitmSniffer:
         # print(upload.status_code, upload.json())
 
         '''VIRUS TOTAL API'''
-        upload = self.vt_sender()
+        vt = VirusTotalApi()
+        upload = vt.scan(self.file_name)
         json_writer("virus_total_upload_info", upload.json())
         if upload.json()['response_code'] == 1:
             print((upload.json()['verbose_msg']).partition(',')[0] + "\nPlease wait for the file report!")
-            report = self.vt_sender('report', upload.json())
+            report = vt.report(upload.json()['sha256'], all_info=True)
+            print(report)
             scan_started = time.time()
             while report.json()['response_code'] != 1:
-                report = self.vt_sender('report', upload.json())
+                report = vt.report(upload.json()['sha256'], all_info=True)
                 now = time.time()
                 print("Analyzing ({0})s".format(str(now - scan_started).partition('.')[0]), end='\r')
             print(report.json()['verbose_msg'] + ", check in the program folder for complete report!")
@@ -214,7 +199,9 @@ class MitmSniffer:
 
         '''evidence extractor'''
         evidence = self.evidence_extractor(report.json())
-        print (evidence)
+        print ("Relevated evidence for the uploaded file:\n", evidence)
+        json_writer("evidence", evidence)
+
         '''SHODAN API'''
 
 

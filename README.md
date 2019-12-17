@@ -32,7 +32,7 @@ Better description will be given....
 
 ```
 
-This will be an example of output:
+This is an example of output:
 
 ```
 press 'Q' to quit sniffing

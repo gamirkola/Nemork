@@ -73,6 +73,7 @@ For now there isn't a automated procedure to make tests
 
 This system will be used in ngeneral for forensics purposes, 
 
+<!--
 ## Built With
 
 ## * [Dropwizard](http://www.dropwizard.io/1.0.2/docs/) - The web framework used
@@ -86,14 +87,14 @@ This system will be used in ngeneral for forensics purposes,
 ## Versioning
 
 ## We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/your/project/tags). 
-
+-->
 ## Authors
 
 * **Mirko Gala** 
-
+<!--
 ## License
 
 ## This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
 
 ## Acknowledgments
-
+-->

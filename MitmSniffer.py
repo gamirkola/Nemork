@@ -206,9 +206,11 @@ class MitmSniffer:
         json_writer("evidence", evidence)
 
         '''domain report of the exctracted domains visited'''
+
         for key, val in evidence.items():
             url_report = vt.url_report(val, True, True)
-            json_writer("./url_report/report" + key, url_report.json())
+            if url_report.status_code == 200:
+                json_writer("./url_report/report" + key, url_report.json())
 
         '''SHODAN API'''
 

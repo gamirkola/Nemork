@@ -179,28 +179,36 @@ class MitmSniffer:
         # upload = api_packet_total.search_by_pcap(pcap_file_obj=open(self.file_name, 'rb'))
         # print(upload.status_code, upload.json())
 
-        '''VIRUS TOTAL API'''
+        '''send a scan to vt api and return the report about the given file'''
         vt = VirusTotalApi()
         upload = vt.scan(self.file_name)
         json_writer("virus_total_upload_info", upload.json())
-        if upload.json()['response_code'] == 1:
+        if upload.status_code == 200 or upload.json()['response_code'] == 1:
             print((upload.json()['verbose_msg']).partition(',')[0] + "\nPlease wait for the file report!")
-            report = vt.report(upload.json()['sha256'], all_info=True)
-            print(report)
+            report = vt.report(upload.json()['resource'], all_info=True)
+            print("report", report)
             scan_started = time.time()
-            while report.json()['response_code'] != 1:
-                report = vt.report(upload.json()['sha256'], all_info=True)
+            while report.status_code != 200 or report.json()['response_code'] != 1:
+                report = vt.report(upload.json()['resource'], all_info=True)
                 now = time.time()
                 print("Analyzing ({0})s".format(str(now - scan_started).partition('.')[0]), end='\r')
-            print(report.json()['verbose_msg'] + ", check in the program folder for complete report!")
-            json_writer("virus_total_report", report.json())
+            for i in tqdm(range(20)):
+                time.sleep(1)
+            report_ok = vt.report(upload.json()['resource'], all_info=True)
+            print(report_ok.json()['verbose_msg'] + ", check in the program folder for complete report!")
+            json_writer("virus_total_report", report_ok.json())
         else:
             print(upload.json()['verbose_msg'])
 
         '''evidence extractor'''
-        evidence = self.evidence_extractor(report.json())
+        evidence = self.evidence_extractor(report_ok.json())
         print ("Relevated evidence for the uploaded file:\n", evidence)
         json_writer("evidence", evidence)
+
+        '''domain report of the exctracted domains visited'''
+        for key, val in evidence.items():
+            url_report = vt.url_report(val, True, True)
+            json_writer("./url_report/report" + key, url_report.json())
 
         '''SHODAN API'''
 

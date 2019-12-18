@@ -186,13 +186,13 @@ class MitmSniffer:
         if upload.status_code == 200 or upload.json()['response_code'] == 1:
             print((upload.json()['verbose_msg']).partition(',')[0] + "\nPlease wait for the file report!")
             report = vt.report(upload.json()['resource'], all_info=True)
-            print("report", report)
             scan_started = time.time()
             while report.status_code != 200 or report.json()['response_code'] != 1:
                 report = vt.report(upload.json()['resource'], all_info=True)
                 now = time.time()
+                time.sleep(5)
                 print("Analyzing ({0})s".format(str(now - scan_started).partition('.')[0]), end='\r')
-            for i in tqdm(range(20)):
+            for i in tqdm(range(30)):
                 time.sleep(1)
             report_ok = vt.report(upload.json()['resource'], all_info=True)
             print(report_ok.json()['verbose_msg'] + ", check in the program folder for complete report!")
@@ -206,11 +206,11 @@ class MitmSniffer:
         json_writer("evidence", evidence)
 
         '''domain report of the exctracted domains visited'''
-
-        for key, val in evidence.items():
+        print("Generating a report for each evidence:")
+        for key, val in tqdm(evidence.items()):
             url_report = vt.url_report(val, True, True)
             if url_report.status_code == 200:
-                json_writer("./url_report/report" + key, url_report.json())
+                json_writer("./url_report/report_" + key, url_report.json())
 
         '''SHODAN API'''
 

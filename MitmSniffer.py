@@ -13,9 +13,14 @@ from pathlib import Path
 import sslkeylog
 import requests
 import pyx
-import shodan
+from shodan import Shodan
 import pickle
 from VirusTotalApi import VirusTotalApi
+import dns.zone
+import dns.ipv4
+import os.path
+import sys
+
 
 load_layer("http")
 
@@ -45,6 +50,8 @@ def send_cmd(cmd):
     else:
         return False
 
+def cmp(a, b):
+    return (a > b) - (a < b)
 
 '''write a json obj with the given filename'''
 
@@ -77,11 +84,11 @@ class MitmSniffer:
         except:
             return False
 
-    '''general method used to query shodan API'''
-
-    def shodan_sender(self):
-        api_shodan = shodan.Shodan(API_KEY_SHODAN)
-
+    def hostname_resolves(self, hostname):
+        try:
+            return socket.gethostbyname(hostname)
+        except socket.error:
+            return 0
 
     '''function used to exctract relevant data from the given research'''
 
@@ -159,7 +166,7 @@ class MitmSniffer:
         while True:
             try:
                 if keyboard.is_pressed('q'):
-                    print("Thanks for sniffing with me ;)")
+                    print("\nThanks for sniffing with me ;)")
                     sniffing.terminate()
                     mitm_sniff.terminate()
                     self.pcap_generator()
@@ -173,12 +180,6 @@ class MitmSniffer:
 
     def packets_analysis(self):
 
-        '''I'VE COMMENTED THIS BECOUSE AT THE MOMENT THE PACKET TOTAL API ARE NOT WORKING PROPERLY'''
-        # api_packet_total = SearchTools(API_KEY_PACKET_TOTAL)
-        #
-        # upload = api_packet_total.search_by_pcap(pcap_file_obj=open(self.file_name, 'rb'))
-        # print(upload.status_code, upload.json())
-
         '''send a scan to vt api and return the report about the given file'''
         vt = VirusTotalApi()
         upload = vt.scan(self.file_name)
@@ -190,7 +191,7 @@ class MitmSniffer:
             while report.status_code != 200 or report.json()['response_code'] != 1:
                 report = vt.report(upload.json()['resource'], all_info=True)
                 now = time.time()
-                time.sleep(5)
+                time.sleep(10)
                 print("Analyzing ({0})s".format(str(now - scan_started).partition('.')[0]), end='\r')
             for i in tqdm(range(30)):
                 time.sleep(1)
@@ -206,15 +207,39 @@ class MitmSniffer:
         json_writer("evidence", evidence)
 
         '''domain report of the exctracted domains visited'''
-        print("Generating a report for each evidence:")
-        for key, val in tqdm(evidence.items()):
+        for key, val in tqdm(evidence.items(), desc="Generating a report for each evidence"):
             url_report = vt.url_report(val, True, True)
             if url_report.status_code == 200:
                 json_writer("./url_report/report_" + key, url_report.json())
 
-        '''SHODAN API'''
+        '''SHODAN API
+        a future upgrade could be implementing search filter by becoming a Shodan member'''
+
+        try:
+            api = Shodan(API_KEY_SHODAN)
+            ips = []
+
+            for key, val in tqdm(evidence.items(), desc="Hostname resolution"):
+                if "ip" not in key:
+                    ips.append(self.hostname_resolves(val))
+                else:
+                    ips.append(val)
+
+            ip_info = {}
+            for key, val in tqdm(enumerate(ips), desc="Wait for Shodan report", total=len(ips)):
+                try:
+                    ip_info['ip'+str(key)] = api.host(val)
+                    json_writer("./shodan_report/ip"+str(key), ip_info['ip'+str(key)])
+                except Exception as e:
+                    print('Error: {}: {}'.format(val, e))
+                    pass
+                time.sleep(2)
 
 
+
+        except Exception as e:
+            print ('Error: {}'.format(e))
+            sys.exit(1)
 
         # with PcapReader(self.file_name) as packet_list:
         #     for i, pkt in tqdm(enumerate(packet_list)):

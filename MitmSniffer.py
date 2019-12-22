@@ -83,6 +83,8 @@ class MitmSniffer:
         except:
             return False
 
+    '''function that resolves an hostname when given in the first ip finded'''
+
     def hostname_resolves(self, hostname):
         try:
             return socket.gethostbyname(hostname)
@@ -240,6 +242,3 @@ class MitmSniffer:
             print ('Error: {}'.format(e))
             sys.exit(1)
 
-        # with PcapReader(self.file_name) as packet_list:
-        #     for i, pkt in tqdm(enumerate(packet_list)):
-        #         pkt.pdfdump("./pktdumps/dump{}".format(i))

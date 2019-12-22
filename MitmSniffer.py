@@ -4,7 +4,6 @@ import keyboard
 from mitmproxy import proxy, options
 from mitmproxy.tools.dump import DumpMaster
 from multiprocessing import *
-from packettotal_sdk.search_tools import SearchTools
 from tqdm import tqdm
 import os
 import settings

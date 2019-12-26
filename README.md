@@ -1,6 +1,6 @@
-# MitmSniffer
+# Nemork
 
-Mitm framework for traffic analisys and vulnerabiity assesment
+Network Mitm Framework for traffic analisys and vulnerabiity assesment
 
 ## Getting Started
 

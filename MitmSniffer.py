@@ -1,26 +1,23 @@
 from kamene.all import *
 from scapy.all import *
 import keyboard
-from mitmproxy import proxy, options
+from mitmproxy import proxy, options, ctx
 from mitmproxy.tools.dump import DumpMaster
 from multiprocessing import *
 from tqdm import tqdm
 import os
 import settings
-import json
 from pathlib import Path
-import sslkeylog
 import requests
-import pyx
 from shodan import Shodan
-import pickle
 from VirusTotalApi import VirusTotalApi
 import dns.zone
 import dns.ipv4
 import os.path
 import sys
 import sslkeylog
-from utils import show_packet, send_cmd, cmp, json_writer
+from utils import send_cmd, cmp, json_writer
+import dill
 
 
 
@@ -77,11 +74,6 @@ class MitmSniffer:
                     evidence['url' + str(i)] = val
         return evidence
 
-    '''add a packet to the program list and show it'''
-
-    def packet_append(self, packet):
-        show_packet(packet)
-        self.pkts.append(packet)
 
     '''verify and set the network options'''
 
@@ -99,7 +91,7 @@ class MitmSniffer:
     '''sniff the all the specified packet with scapy sniff function'''
 
     def sniffer(self):
-        sn = sniff(filter=self.filter, iface=self.interface, prn=self.packet_append)
+        sn = sniff(filter=self.filter, iface=self.interface, prn=lambda x: (x.summary().rstrip('\r'), self.pkts.append(x)))
 
     '''start the real mitm using mitmproxy'''
 
@@ -125,9 +117,6 @@ class MitmSniffer:
         self.pkts = Manager().list()
         sniffing = Process(target=self.sniffer, args=self.pkts)
         sniffing.start()
-
-        # cmd = 'export SSLKEYLOGFILE="$PWD/.mitmproxy/sslkeylogfile.txt" mitmproxy'
-        # print(send_cmd(cmd))
 
         mitm_sniff = Process(target=self.mitm_sniffer, args=self.pkts)
         mitm_sniff.start()

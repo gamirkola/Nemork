@@ -1,12 +1,7 @@
 '''THIS CLASS CONTAINS ONLY GENERAL FUNCTION USED BY THE OTHER CLASSES'''
-from kamene.all import *
 import json
-'''function that shaw the packet, maybe it will be modified'''
+import subprocess
 
-
-def show_packet(packet):
-    if packet:
-        packet.show()
 
 
 '''terminal command send function'''

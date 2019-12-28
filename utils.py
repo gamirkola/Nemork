@@ -7,15 +7,22 @@ import subprocess
 '''terminal command send function'''
 
 
-def send_cmd(cmd):
+def send_cmd(cmd, new_shell=False):
     if cmd and cmd != None:
-        try:
-            out = subprocess.check_output(cmd, shell=True, executable='/bin/bash').decode('utf-8')
-            if out.strip():
-                print(out)
-            return True
-        except (subprocess.CalledProcessError, subprocess.OSerror):
-            return False
+        if new_shell:
+            try:
+                subprocess.call(['xterm', '-e', cmd])
+                return True
+            except (subprocess.CalledProcessError, subprocess.OSerror):
+                return False
+        else:
+            try:
+                out = subprocess.check_output(cmd, shell=True, executable='/bin/bash').decode('utf-8')
+                if out.strip():
+                    print(out)
+                return True
+            except (subprocess.CalledProcessError, subprocess.OSerror):
+                return False
     else:
         return False
 

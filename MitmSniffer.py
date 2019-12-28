@@ -1,7 +1,7 @@
 from kamene.all import *
 from scapy.all import *
 import keyboard
-from mitmproxy import proxy, options, ctx
+from mitmproxy import proxy, options, ctx, http
 from mitmproxy.tools.dump import DumpMaster
 from multiprocessing import *
 from tqdm import tqdm
@@ -17,7 +17,7 @@ import os.path
 import sys
 import sslkeylog
 from utils import send_cmd, cmp, json_writer
-import dill
+import mitmproxy.http
 
 
 
@@ -97,18 +97,22 @@ class MitmSniffer:
 
     def mitm_sniffer(self):
 
-        # set the proper net options
+        ''' set the proper net options '''
         print(self.set_net_opt())
-        sslkeylog.set_keylog("keylog.log")
 
-        ''' start mitmproxy for collecting as mitm http and https traffic with the related keys'''
-        opts = options.Options(listen_host='0.0.0.0', listen_port=8080, mode='transparent',
-                               confdir="/home/mirko/.mitmproxy/")
-        pconf = proxy.config.ProxyConfig(opts)
-        m = DumpMaster(opts)
-        m.server = proxy.server.ProxyServer(pconf)
-
-        m.run()
+        ''' start mitmproxy for collecting as mitm http and https traffic with the related keys old method, deprecated'''
+        # opts = options.Options(listen_host='0.0.0.0', listen_port=8080, mode='transparent',
+        #                        confdir="/home/mirko/.mitmproxy/")
+        # pconf = proxy.config.ProxyConfig(opts)
+        # m = DumpMaster(opts)
+        # m.server = proxy.server.ProxyServer(pconf)
+        #
+        # try:
+        #     m.run()
+        # except keyboard.is_pressed('q'):
+        #     m.shutdown()
+        ''' correct methed and the only way to get pre-shared key'''
+        send_cmd("./mitm.sh", True)
 
     def start_sniffing(self):
         print("press 'Q' to quit sniffing")
@@ -120,6 +124,7 @@ class MitmSniffer:
 
         mitm_sniff = Process(target=self.mitm_sniffer, args=self.pkts)
         mitm_sniff.start()
+
         while True:
             try:
                 if keyboard.is_pressed('q'):
@@ -132,7 +137,6 @@ class MitmSniffer:
                     pass
             except:
                 pass
-        print("export var", os.environ.get('SSLKEYLOGFILE'))
 
     '''function that analyzes with various api the pcap file creating a json'''
 

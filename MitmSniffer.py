@@ -93,27 +93,6 @@ class MitmSniffer:
     def sniffer(self):
         sn = sniff(filter=self.filter, iface=self.interface, prn=lambda x: (x.summary().rstrip('\r'), self.pkts.append(x)))
 
-    '''start the real mitm using mitmproxy'''
-
-    def mitm_sniffer(self):
-
-        ''' set the proper net options '''
-        print(self.set_net_opt())
-
-        ''' start mitmproxy for collecting as mitm http and https traffic with the related keys old method, deprecated'''
-        # opts = options.Options(listen_host='0.0.0.0', listen_port=8080, mode='transparent',
-        #                        confdir="/home/mirko/.mitmproxy/")
-        # pconf = proxy.config.ProxyConfig(opts)
-        # m = DumpMaster(opts)
-        # m.server = proxy.server.ProxyServer(pconf)
-        #
-        # try:
-        #     m.run()
-        # except keyboard.is_pressed('q'):
-        #     m.shutdown()
-        ''' correct methed and the only way to get pre-shared key'''
-        send_cmd('SSLKEYLOGFILE="$PWD/.mitmproxy/sslkeylogfile.txt"  mitmproxy --mode transparent --showhost', True)
-
     def start_sniffing(self):
         print("press 'Q' to quit sniffing")
 
@@ -122,15 +101,16 @@ class MitmSniffer:
         sniffing = Process(target=self.sniffer, args=self.pkts)
         sniffing.start()
 
-        mitm_sniff = Process(target=self.mitm_sniffer, args=self.pkts)
-        mitm_sniff.start()
+        ''' set the proper net options '''
+        print(self.set_net_opt())
+        '''start mitmproxy'''
+        send_cmd('SSLKEYLOGFILE="$PWD/.mitmproxy/sslkeylogfile.txt"  mitmproxy --mode transparent --showhost', True)
 
         while True:
             try:
                 if keyboard.is_pressed('q'):
                     print("\nThanks for sniffing with me ;)")
                     sniffing.terminate()
-                    mitm_sniff.terminate()
                     self.pcap_generator()
                     break
                 else:

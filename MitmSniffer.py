@@ -112,7 +112,7 @@ class MitmSniffer:
         # except keyboard.is_pressed('q'):
         #     m.shutdown()
         ''' correct methed and the only way to get pre-shared key'''
-        send_cmd("./mitm.sh", True)
+        send_cmd('SSLKEYLOGFILE="$PWD/.mitmproxy/sslkeylogfile.txt"  mitmproxy --mode transparent --showhost', True)
 
     def start_sniffing(self):
         print("press 'Q' to quit sniffing")

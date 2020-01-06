@@ -80,10 +80,11 @@ class MitmSniffer:
     def set_net_opt(self):
         print("Enabling ip forwarding...")
         enable_ip_forwarding = "sysctl -w net.ipv4.ip_forward=1"
+        disable_icmp_redirects = "sysctl -w net.ipv4.conf.all.send_redirects=1"
         print("Setting up iptables...")
         nat_port_80 = "iptables -t nat -A PREROUTING -i " + self.interface + " -p tcp --dport 80 -j REDIRECT --to-port 8080"
         nat_port_443 = "iptables -t nat -A PREROUTING -i " + self.interface + " -p tcp --dport 443 -j REDIRECT --to-port 8080"
-        if send_cmd(enable_ip_forwarding) and send_cmd(nat_port_80) and send_cmd(nat_port_443):
+        if send_cmd(enable_ip_forwarding) and send_cmd(nat_port_80) and send_cmd(nat_port_443) and send_cmd(disable_icmp_redirects):
             return "Net options applied successfully!"
         else:
             return "Sorry, the program has some problems in setting up the propers network options!"
@@ -158,7 +159,7 @@ class MitmSniffer:
         for key, val in tqdm(evidence.items(), desc="Generating a report for each evidence"):
             url_report = vt.url_report(val, True, True)
             if url_report.status_code == 200:
-                json_writer("./url_report/report_" + key, url_report.json())
+                json_writer("./vt_url_report/report_" + key, url_report.json())
 
         '''SHODAN API
         a future upgrade could be implementing search filter by becoming a Shodan member'''

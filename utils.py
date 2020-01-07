@@ -18,9 +18,7 @@ def send_cmd(cmd, output_needed=True, new_shell=False, cwd=None):
         if output_needed:
             try:
                 out = subprocess.check_output(cmd, shell=True, executable='/bin/bash').decode('utf-8')
-                if out.strip():
-                    print(out)
-                return True
+                return out.strip()
             except subprocess.CalledProcessError as e:
                 print(e)
                 return False

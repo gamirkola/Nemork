@@ -84,7 +84,7 @@ class MitmSniffer:
         print("Setting up iptables...")
         nat_port_80 = "iptables -t nat -A PREROUTING -i " + self.interface + " -p tcp --dport 80 -j REDIRECT --to-port 8080"
         nat_port_443 = "iptables -t nat -A PREROUTING -i " + self.interface + " -p tcp --dport 443 -j REDIRECT --to-port 8080"
-        if send_cmd(enable_ip_forwarding) and send_cmd(nat_port_80) and send_cmd(nat_port_443) and send_cmd(disable_icmp_redirects):
+        if send_cmd(enable_ip_forwarding, False) and send_cmd(nat_port_80, False) and send_cmd(nat_port_443, False) and send_cmd(disable_icmp_redirects, False):
             return "Net options applied successfully!"
         else:
             return "Sorry, the program has some problems in setting up the propers network options!"
@@ -105,7 +105,7 @@ class MitmSniffer:
         ''' set the proper net options '''
         print(self.set_net_opt())
         '''start mitmproxy'''
-        send_cmd('SSLKEYLOGFILE="$PWD/.mitmproxy/sslkeylogfile.txt"  mitmproxy --mode transparent --showhost', True)
+        send_cmd('SSLKEYLOGFILE="$PWD/.mitmproxy/sslkeylogfile.txt"  mitmproxy --mode transparent --showhost', output_needed=False, new_shell=True)
 
         while True:
             try:

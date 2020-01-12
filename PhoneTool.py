@@ -11,6 +11,7 @@ import pathlib
 import requests
 import re
 from xtract import xtract
+import time
 
 gadget_architecture = {
     "arm64": "android-arm64.so",
@@ -21,10 +22,12 @@ gadget_architecture = {
     "x86_64": "android-x86_64.so"
 }
 
+
 class PhoneTool:
 
     def __init__(self, app_name, ip=None):
         self.app_name = app_name
+        self.package_name = ""
         if ip:
             self.ip = ip
 
@@ -32,15 +35,16 @@ class PhoneTool:
         select_apk = "adb shell pm list packages -f | grep " + self.app_name
         output = send_cmd(select_apk, output_needed=True)
         if output:
-            print(output[:(output.find("=") + 11)])
-            pull_apk = send_cmd("adb pull " + output[:(output.find("=") + 11)].strip("package:") + "apk", output_needed=False, cwd="apk")
+            self.package_name = output.split("=").pop(-1)
+            print("Package name: ", self.package_name)
+            pull_apk = send_cmd("adb pull " + output[:(output.find("=") + 11)].strip("package:") + "apk",
+                                output_needed=False, cwd="apk")
             print("Apk pulled successfully! File path is:", os.getcwd() + "/apk/base.apk")
 
     def inject_mitm_cert(self):
         cert_path = input("Enter .mitmproxy folder path: ")
         inj = "adb push " + cert_path + "mitmproxy-ca-cert.cer /data/local/tmp/cert-der.crt"
         print(send_cmd(inj, output_needed=True))
-
 
     def inject(self, libdir, arch, selected_library):
         # Get latests frida-gadgets
@@ -147,5 +151,29 @@ class PhoneTool:
 
         print(f"[+] SUCCESS!! Your new apk is : {apk_name}. Now you should sign it.\n")
 
+    @staticmethod
+    def signer():
+        if os.path.exists(os.getcwd() + "my-release-key.keystore"):
+            keystore_gen = send_cmd("keytool -genkey -v -keystore my-release-key.keystore -alias alias_name -keyalg RSA -keysize 2048 -validity 10000",True)
+            if keystore_gen:
+                print(keystore_gen)
+        else:
+            print("You already have a keystore, if it's not working try to refactor it...")
+        time.sleep(3)
+        sign = send_cmd("jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore my-release-key.keystore my_app.apk alias_name", True)
+        if sign:
+            print(sign)
 
 
+    '''i know that's a funny name, this function pushes in to do phone the new infected app'''
+    def pusher(self):
+        '''before pushing the new app we have to uninstall the old version of it'''
+        print("Trying to uninstall the original app from the phone...")
+        un = send_cmd("adb uninstall " + self.package_name, True)
+        if un:
+            print(un)
+        '''installation of the new apk'''
+        print("Try to install the new infected app on the phone...")
+        ins = send_cmd("adb install -r my_app.apk", True)
+        if ins:
+            print(ins)

@@ -58,13 +58,13 @@ This system will be used in general for forensics purposes,
 
 ## Built With
 
-## * [Dropwizard](http://www.dropwizard.io/1.0.2/docs/) - The web framework used
-## * [Maven](https://maven.apache.org/) - Dependency Management
-## * [ROME](https://rometools.github.io/rome/) - Used to generate RSS Feeds
+* **[Mitmproxy](https://mitmproxy.org/) - The proxy used**
+* **[Frida](https://frida.re/) - Bypass ssl pinning**
+* **[Scapy/kamene](https://scapy.net/) - For the tcpdump like sniffing, kamene is only a py3 porting**
 
 ## Contributing
 
-## At the moment if you want to contribute in some way, you have to write to me.
+At the moment if you want to contribute in some way, you have to write to me.
 
 ## Authors
 

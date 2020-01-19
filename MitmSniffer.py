@@ -105,7 +105,8 @@ class MitmSniffer:
         ''' set the proper net options '''
         print(self.set_net_opt())
         '''start mitmproxy'''
-        send_cmd('SSLKEYLOGFILE="$PWD/.mitmproxy/sslkeylogfile.txt"  mitmproxy --mode transparent --showhost', output_needed=False, new_shell=True)
+        if send_cmd('SSLKEYLOGFILE="$PWD/.mitmproxy/sslkeylogfile.txt"  mitmproxy --mode transparent --showhost', output_needed=False, new_shell=True):
+            print("Mitmproxy started correctly")
 
         while True:
             try:

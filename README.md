@@ -51,29 +51,11 @@ Please wait for the file report!
 
 as you can see it also makes some changes to your OS environment to make the proxy work trasparently and in a correct way
 
-## Running the tests
-
-For now there isn't a automated procedure to make tests
-
-### Break down into end to end tests
-
-
-```
-
-```
-
-### And coding style tests
-
-
-```
-
-```
-
 ## Deployment
 
-This system will be used in ngeneral for forensics purposes, 
+This system will be used in general for forensics purposes, 
 
-<!--
+
 ## Built With
 
 ## * [Dropwizard](http://www.dropwizard.io/1.0.2/docs/) - The web framework used
@@ -82,12 +64,8 @@ This system will be used in ngeneral for forensics purposes,
 
 ## Contributing
 
-## Please read [CONTRIBUTING.md](https://gist.github.com/PurpleBooth/b24679402957c63ec426) for details on our code of conduct, and the process for submitting pull requests to us.
+## At the moment if you want to contribute in some way, you have to write to me.
 
-## Versioning
-
-## We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/your/project/tags). 
--->
 ## Authors
 
 * **Mirko Gala** 

@@ -31,6 +31,7 @@ class PhoneTool:
         if ip:
             self.ip = ip
 
+    #devo creare la funzione che parsa il nome dell'apk e il percorso velocemente usare le regex
     def select_package(self):
         select_apk = "adb shell pm list packages -f | grep " + self.app_name
         output = send_cmd(select_apk, output_needed=True)
@@ -39,7 +40,13 @@ class PhoneTool:
             print("Package name: ", self.package_name)
             pull_apk = send_cmd("adb pull " + output[:(output.find("=") + 11)].strip("package:") + "apk",
                                 output_needed=False, cwd="apk")
-            print("Apk pulled successfully! File path is:", os.getcwd() + "/apk/base.apk")
+            if not pull_apk:
+                cp = send_cmd("adb shell cp " + str(re.findall(r"\w*.apk")).strip('[]')
+                              + "/storage/emulated/0/Download/base.apk",
+                                output_needed=True)
+                if cp:
+                    print(cp)
+                    print("Apk pulled successfully! File path is:", os.getcwd() + "/apk/base.apk")
 
     def inject_mitm_cert(self):
         cert_path = input("Enter .mitmproxy folder path: ")
@@ -177,3 +184,16 @@ class PhoneTool:
         ins = send_cmd("adb install -r my_app.apk", True)
         if ins:
             print(ins)
+
+    @staticmethod
+    def frida_starter():
+        pid = send_cmd('frida-ps -U', output_needed=True)
+        if pid:
+            #some operation with the output and assign the correct pid to the var
+            print("the process id is: ", pid)
+            print("Starting frida-gadget on the injected app to bypass the SSL pinning...")
+            if send_cmd("frida -U -l pinning.js " + pid + " --no-pause", False, True):
+                print("Frida-gadget started properly!")
+        else:
+            print("Something went wrong; check if the desidered app is running on the phone...")
+

@@ -12,6 +12,8 @@ import requests
 import re
 from xtract import xtract
 import time
+from multiprocessing import *
+
 
 gadget_architecture = {
     "arm64": "android-arm64.so",
@@ -38,15 +40,14 @@ class PhoneTool:
         if output:
             self.package_name = output.split("=").pop(-1)
             print("Package name: ", self.package_name)
-            pull_apk = send_cmd("adb pull " + output[:(output.find("=") + 11)].strip("package:") + "apk",
-                                output_needed=False, cwd="apk")
-            if not pull_apk:
-                cp = send_cmd("adb shell cp " + str(re.findall(r"\w*.apk")).strip('[]')
-                              + "/storage/emulated/0/Download/base.apk",
+            #str(re.findall(r"\w*.apk", output)).strip('[]')
+            cp = send_cmd("adb shell cp " + output.partition("=")[0].strip("package:")
+                              + "apk /storage/emulated/0/Download/base.apk",
                                 output_needed=True)
-                if cp:
-                    print(cp)
-                    print("Apk pulled successfully! File path is:", os.getcwd() + "/apk/base.apk")
+            pull_apk = send_cmd("adb pull /storage/emulated/0/Download/base.apk",
+                                output_needed=False, cwd="apk")
+            if pull_apk:
+                print("Apk pulled successfully! File path is:", os.getcwd() + "/apk/base.apk")
 
     def inject_mitm_cert(self):
         cert_path = input("Enter .mitmproxy folder path: ")
@@ -55,12 +56,14 @@ class PhoneTool:
 
     def inject(self, libdir, arch, selected_library):
         # Get latests frida-gadgets
-        latest = requests.get(url="https://github.com/frida/frida/releases/latest")
-
+        #latest = requests.get(url="https://github.com/frida/frida/releases/latest")
+        latest = requests.get(url="https://github.com/frida/frida/releases/tag/12.6.1")
         # Get stable frida-gadgets
         # latest = requests.get(url = "https://github.com/frida/frida/releases/tag/12.5.4")
 
         response = latest.content.decode('utf-8')
+        '''the last version of frida is buggy'''
+        #latestArch = re.findall(r'\/frida\/frida\/releases\/download\/.*\/frida-gadget.*\-android\-.*xz', response)
         latestArch = re.findall(r'\/frida\/frida\/releases\/download\/.*\/frida-gadget.*\-android\-.*xz', response)
         url_gadget = ""
         for i in latestArch:
@@ -181,19 +184,24 @@ class PhoneTool:
             print(un)
         '''installation of the new apk'''
         print("Try to install the new infected app on the phone...")
-        ins = send_cmd("adb install -r my_app.apk", True)
+        ins = send_cmd("adb install my_app.apk", True)
         if ins:
             print(ins)
 
-    @staticmethod
-    def frida_starter():
-        pid = send_cmd('frida-ps -U', output_needed=True)
+
+    def frida_starter(self):
+        #future upgrade, start the app from here
+        print("Start the app on the phone...")
+        pid = False
+        while not pid:
+            pid = send_cmd('frida-ps -U', output_needed=True)
         if pid:
-            #some operation with the output and assign the correct pid to the var
+            pid = concatenate_list_data(re.findall("[0-9]", pid))
             print("the process id is: ", pid)
             print("Starting frida-gadget on the injected app to bypass the SSL pinning...")
             if send_cmd("frida -U -l pinning.js " + pid + " --no-pause", False, True):
                 print("Frida-gadget started properly!")
+            return True
         else:
             print("Something went wrong; check if the desidered app is running on the phone...")
-
+            return False

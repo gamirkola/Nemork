@@ -11,7 +11,7 @@ def send_cmd(cmd, output_needed=True, new_shell=False, cwd=None):
     if cmd and cmd != None:
         if new_shell:
             try:
-                subprocess.check_call(['xterm', '-e', cmd])
+                subprocess.Popen(['xterm', '-e', cmd], stdin=None, stdout=None, stderr=None, close_fds=True)
                 return True
             except subprocess.CalledProcessError:
                 return False
@@ -47,3 +47,10 @@ def json_writer(file_name, json_obj):
     with open(file_name, 'w') as outfile:
         json.dump(json_obj, outfile, indent=4, sort_keys=True)
         return True
+
+
+def concatenate_list_data(list):
+    result= ''
+    for element in list:
+        result += str(element)
+    return result

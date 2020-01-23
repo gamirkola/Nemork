@@ -33,28 +33,28 @@ class PhoneTool:
         if ip:
             self.ip = ip
 
-    #devo creare la funzione che parsa il nome dell'apk e il percorso velocemente usare le regex
     def select_package(self):
         select_apk = "adb shell pm list packages -f | grep " + self.app_name
         output = send_cmd(select_apk, output_needed=True)
         if output:
             self.package_name = output.split("=").pop(-1)
             print("Package name: ", self.package_name)
-            #str(re.findall(r"\w*.apk", output)).strip('[]')
             cp = send_cmd("adb shell cp " + output.partition("=")[0].strip("package:")
-                              + "apk /storage/emulated/0/Download/base.apk",
+                              + "apk /storage/emulated/0/Download/base_" + self.package_name + ".apk",
                                 output_needed=True)
-            pull_apk = send_cmd("adb pull /storage/emulated/0/Download/base.apk",
+            pull_apk = send_cmd("adb pull /storage/emulated/0/Download/base_"+ self.package_name +".apk",
                                 output_needed=False, cwd="apk")
             if pull_apk:
-                print("Apk pulled successfully! File path is:", os.getcwd() + "/apk/base.apk")
+                print("Apk pulled successfully! File path is:", os.getcwd() + "/apk/base_" + self.package_name + ".apk")
 
-    def inject_mitm_cert(self):
+    @staticmethod
+    def inject_mitm_cert():
         cert_path = input("Enter .mitmproxy folder path: ")
         inj = "adb push " + cert_path + "mitmproxy-ca-cert.cer /data/local/tmp/cert-der.crt"
         print(send_cmd(inj, output_needed=True))
 
-    def inject(self, libdir, arch, selected_library):
+    @staticmethod
+    def inject(libdir, arch, selected_library):
         # Get latests frida-gadgets
         #latest = requests.get(url="https://github.com/frida/frida/releases/latest")
         latest = requests.get(url="https://github.com/frida/frida/releases/tag/12.6.1")
@@ -63,7 +63,6 @@ class PhoneTool:
 
         response = latest.content.decode('utf-8')
         '''the last version of frida is buggy'''
-        #latestArch = re.findall(r'\/frida\/frida\/releases\/download\/.*\/frida-gadget.*\-android\-.*xz', response)
         latestArch = re.findall(r'\/frida\/frida\/releases\/download\/.*\/frida-gadget.*\-android\-.*xz', response)
         url_gadget = ""
         for i in latestArch:
@@ -155,14 +154,13 @@ class PhoneTool:
 
         # Zip
         print("[+] APK Building...")
-        apk_name = "my_app.apk"
+        apk_name = "base_"+ self.package_name +"_infected.apk"
         shutil.make_archive("new", 'zip', workingdir)
         shutil.move("new.zip", apk_name)
 
         print(f"[+] SUCCESS!! Your new apk is : {apk_name}. Now you should sign it.\n")
 
-    @staticmethod
-    def signer():
+    def signer(self):
         if os.path.exists(os.getcwd() + "my-release-key.keystore"):
             keystore_gen = send_cmd("keytool -genkey -v -keystore my-release-key.keystore -alias alias_name -keyalg RSA -keysize 2048 -validity 10000",True)
             if keystore_gen:
@@ -170,10 +168,9 @@ class PhoneTool:
         else:
             print("You already have a keystore, if it's not working try to refactor it...")
         time.sleep(3)
-        sign = send_cmd("jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore my-release-key.keystore my_app.apk alias_name", True)
+        sign = send_cmd("jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore my-release-key.keystore base_" + self.package_name + "_infected.apk alias_name", True)
         if sign:
             print(sign)
-
 
     '''i know that's a funny name, this function pushes in to do phone the new infected app'''
     def pusher(self):
@@ -184,10 +181,9 @@ class PhoneTool:
             print(un)
         '''installation of the new apk'''
         print("Try to install the new infected app on the phone...")
-        ins = send_cmd("adb install my_app.apk", True)
+        ins = send_cmd("adb install base_" +self.package_name + "_infected.apk", True)
         if ins:
             print(ins)
-
 
     def frida_starter(self):
         #future upgrade, start the app from here
@@ -201,7 +197,7 @@ class PhoneTool:
             print("Starting frida-gadget on the injected app to bypass the SSL pinning...")
             if send_cmd("frida -U -l pinning.js " + pid + " --no-pause", False, True):
                 print("Frida-gadget started properly!")
-            return True
+            # if send_cmd("frida -U -f " + self.package_name + " -l pinning_notw.js --no-pause", False, True):
+            #     print("Frida-gadget started properly!")
         else:
             print("Something went wrong; check if the desidered app is running on the phone...")
-            return False

@@ -1,5 +1,5 @@
 // start with:
-//   frida -U -l pinning.js -f [APP_ID] --no-pause
+//   frida -U -l pinning_notw.js -f [APP_ID] --no-pause
 
 Java.perform(function () {
     console.log('')

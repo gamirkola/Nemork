@@ -1,10 +1,10 @@
-'''this class in an attempt to makea general class that can operate with adb
+'''this class in an attempt to make a general class that can operate with adb
 using all the things needed to inject a cert in an app to bypass ssl pinning'''
+
 from utils import *
 import lief
 import zipfile
 import shutil
-import subprocess
 import tempfile
 import os
 import pathlib
@@ -12,7 +12,6 @@ import requests
 import re
 from xtract import xtract
 import time
-from multiprocessing import *
 
 
 gadget_architecture = {
@@ -35,17 +34,17 @@ class PhoneTool:
 
     def select_package(self):
         select_apk = "adb shell pm list packages -f | grep " + self.app_name
-        output = send_cmd(select_apk, output_needed=True)
+        output = send_cmd(select_apk)
         if output:
             self.package_name = output.split("=").pop(-1)
             print("Package name: ", self.package_name)
             cp = send_cmd("adb shell cp " + output.partition("=")[0].strip("package:")
-                              + "apk /storage/emulated/0/Download/base_" + self.package_name + ".apk",
-                                output_needed=True)
+                              + "apk /storage/emulated/0/Download/base_" + self.package_name + ".apk")
             pull_apk = send_cmd("adb pull /storage/emulated/0/Download/base_"+ self.package_name +".apk",
                                 output_needed=False, cwd="apk")
             if pull_apk:
                 print("Apk pulled successfully! File path is:", os.getcwd() + "/apk/base_" + self.package_name + ".apk")
+                return os.getcwd() + "/apk/base_" + self.package_name + ".apk"
 
     @staticmethod
     def inject_mitm_cert():
@@ -85,10 +84,12 @@ class PhoneTool:
         libcheck.add_library(gadget_name)
         libcheck.write(libcheck_path.as_posix())
 
-    def apk_operation(self):
+    def apk_operation(self, pkg = None):
         # Get file
-        apk = input("[+] Enter the path of your APK: ")
-
+        if pkg is None:
+            apk = input("[+] Enter the path of your APK: ")
+        else:
+            apk = pkg
         try:
             f = open(apk, 'r+')
         except:
@@ -110,7 +111,11 @@ class PhoneTool:
         libdir = pathlib.Path(workingdir) / "lib"
 
         print("[+] Select the architecture of your system: ")
-        print("If you don't know run: adb shell getprop ro.product.cpu.abi\n")
+
+        arch = send_cmd("adb shell getprop ro.product.cpu.abi")
+        if arch:
+            print("Your current architecture is: ", arch)
+
 
         architectures = os.listdir(libdir)
 

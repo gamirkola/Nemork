@@ -54,4 +54,4 @@ def concatenate_list_data(list):
     # for element in list:
     #     result += str(element)
     # return result
-    return ''.join(list) #tetofonta has been here =)
+    return ''.join(list)

@@ -14,7 +14,7 @@ import settings
 from pathlib import Path
 import requests
 from shodan import Shodan
-from VirusTotalApi import VirusTotalApi
+from virus_total_api import VirusTotalApi
 import dns.zone
 import dns.ipv4
 import os.path

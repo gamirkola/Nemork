@@ -1,7 +1,7 @@
 #!/usr/bin/python3.7
 
-from MitmSniffer import MitmSniffer
-from PhoneTool import PhoneTool
+from mitm_sniffer import MitmSniffer
+from phone_tool import PhoneTool
 
 #select the app
 app = input("insert the name of the app you want to inject: ")

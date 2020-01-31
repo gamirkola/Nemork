@@ -11,8 +11,8 @@ pn = PhoneTool(app.strip())
 pkg = pn.select_package()
 #inject the frida gadget in the app
 pn.apk_operation(pkg)
-#inject aour cert in the phone
-pn.inject_mitm_cert()
+#inject our cert in the phone
+# pn.inject_mitm_cert()
 #sign the infected app
 pn.signer()
 #push the new app in the phone

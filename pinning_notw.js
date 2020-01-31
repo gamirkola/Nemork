@@ -1,11 +1,11 @@
-/* 
-   Android SSL Re-pinning frida script v0.2 030417-pier 
+/*
+   Android SSL Re-pinning frida script v0.2 030417-pier
 
    $ adb push burpca-cert-der.crt /data/local/tmp/cert-der.crt
    $ frida -U -f it.app.mobile -l frida-android-repinning.js --no-pause
 
    https://techblog.mediaservice.net/2017/07/universal-android-ssl-pinning-bypass-with-frida/
-   
+
    UPDATE 20191605: Fixed undeclared var. Thanks to @oleavr and @ehsanpc9999 !
 */
 
@@ -25,14 +25,14 @@ setTimeout(function(){
 	    // Load CAs from an InputStream
 	    console.log("[+] Loading our CA...")
 	    var cf = CertificateFactory.getInstance("X.509");
-	    
+
 	    try {
 	    	var fileInputStream = FileInputStream.$new("/data/local/tmp/cert-der.crt");
 	    }
 	    catch(err) {
 	    	console.log("[o] " + err);
 	    }
-	    
+
 	    var bufferedInputStream = BufferedInputStream.$new(fileInputStream);
 	  	var ca = cf.generateCertificate(bufferedInputStream);
 	    bufferedInputStream.close();
@@ -46,7 +46,7 @@ setTimeout(function(){
 	    var keyStore = KeyStore.getInstance(keyStoreType);
 	    keyStore.load(null, null);
 	    keyStore.setCertificateEntry("ca", ca);
-	    
+
 	    // Create a TrustManager that trusts the CAs in our KeyStore
 	    console.log("[+] Creating a TrustManager that trusts the CA in our KeyStore...");
 	    var tmfAlgorithm = TrustManagerFactory.getDefaultAlgorithm();

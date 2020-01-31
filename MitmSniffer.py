@@ -1,3 +1,7 @@
+from scapy.config import conf
+conf.ipv6_enabled = False
+from kamene.config import conf
+conf.ipv6_enabled = False
 from kamene.all import *
 from scapy.all import *
 import keyboard

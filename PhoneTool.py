@@ -204,5 +204,7 @@ class PhoneTool:
                 print("Frida-gadget started properly!")
             # if send_cmd("frida -U -f " + self.package_name + " -l pinning_notw.js --no-pause", False, True):
             #     print("Frida-gadget started properly!")
+            # if send_cmd("frida -l trypinning.js -U -f com.skype.raider --no-pause" , False, True):
+            #     print("Frida-gadget started properly!")
         else:
             print("Something went wrong; check if the desidered app is running on the phone...")

@@ -1,3 +1,5 @@
 .env
 *.pcap
 *.json
+*.apk
+*.txt

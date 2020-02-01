@@ -13,7 +13,7 @@ import re
 from xtract import xtract
 import time
 
-
+'''main android architectures'''
 gadget_architecture = {
     "arm64": "android-arm64.so",
     "arm64-v8a": "android-arm64.so",
@@ -29,9 +29,11 @@ class PhoneTool:
     def __init__(self, app_name, ip=None):
         self.app_name = app_name
         self.package_name = ""
+        '''ip is not used but will be neede for a future upgrade'''
         if ip:
             self.ip = ip
 
+    '''list and search for the given package in the phone, then moves it in the download folder to be able of pulling it'''
     def select_package(self):
         select_apk = "adb shell pm list packages -f | grep " + self.app_name
         output = send_cmd(select_apk)
@@ -46,12 +48,14 @@ class PhoneTool:
                 print("Apk pulled successfully! File path is:", os.getcwd() + "/apk/base_" + self.package_name + ".apk")
                 return os.getcwd() + "/apk/base_" + self.package_name + ".apk"
 
+    '''will be needed for rooted devices, freeda needs that for hooking the certificate in the apps'''
     @staticmethod
     def inject_mitm_cert():
         cert_path = input("Enter .mitmproxy folder path: ")
         inj = "adb push " + cert_path + "mitmproxy-ca-cert.cer /data/local/tmp/cert-der.crt"
         print(send_cmd(inj, output_needed=True))
 
+    '''this function provides a coorect version of gadjet and inject it into the apk'''
     @staticmethod
     def inject(libdir, arch, selected_library):
         # Get latests frida-gadgets
@@ -61,7 +65,7 @@ class PhoneTool:
         # latest = requests.get(url = "https://github.com/frida/frida/releases/tag/12.5.4")
 
         response = latest.content.decode('utf-8')
-        '''the last version of frida is buggy'''
+        '''the last version of frida is buggy so i've used the 12.6.1'''
         latestArch = re.findall(r'\/frida\/frida\/releases\/download\/.*\/frida-gadget.*\-android\-.*xz', response)
         url_gadget = ""
         for i in latestArch:
@@ -84,6 +88,7 @@ class PhoneTool:
         libcheck.add_library(gadget_name)
         libcheck.write(libcheck_path.as_posix())
 
+    '''this func operates on the apk in order to be able to inject gadget, so decompress it, verify the libraries and then calls  inject'''
     def apk_operation(self, pkg = None):
         # Get file
         if pkg is None:
@@ -165,6 +170,7 @@ class PhoneTool:
 
         print(f"[+] SUCCESS!! Your new apk is : {apk_name}. Now you should sign it.\n")
 
+    '''function made to sign the apk, if it has already created a keystore, uses it, otherwise it will create a keystore'''
     def signer(self):
         if os.path.exists(os.getcwd() + "my-release-key.keystore"):
             keystore_gen = send_cmd("keytool -genkey -v -keystore my-release-key.keystore -alias alias_name -keyalg RSA -keysize 2048 -validity 10000",True)
@@ -190,8 +196,9 @@ class PhoneTool:
         if ins:
             print(ins)
 
+    '''this func listen when a infected app is ready and starts the frida hooking for SSL pinning bypass'''
     def frida_starter(self):
-        #future upgrade, start the app from here
+        #todo try to star the app from here
         print("Start the app on the phone...")
         pid = False
         while not pid:
@@ -202,9 +209,7 @@ class PhoneTool:
             print("Starting frida-gadget on the injected app to bypass the SSL pinning...")
             if send_cmd("frida -U -l pinning.js " + pid + " --no-pause", False, True):
                 print("Frida-gadget started properly!")
-            # if send_cmd("frida -U -f " + self.package_name + " -l pinning_notw.js --no-pause", False, True):
-            #     print("Frida-gadget started properly!")
-            # if send_cmd("frida -l trypinning.js -U -f com.skype.raider --no-pause" , False, True):
-            #     print("Frida-gadget started properly!")
+                return True
         else:
             print("Something went wrong; check if the desidered app is running on the phone...")
+            return False

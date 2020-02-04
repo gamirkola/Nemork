@@ -1,3 +1,12 @@
+"""
+mitm_sniffer.py
+====================================
+One of the core module of my project, here we initialize mitmproxy with the paramater given in the constructor
+and scapy tcpdump like sniffing. Before doing it, i've made some function to set the proper netwok parameter were the
+program is executing, like iptables and the main API for Shodan and VirusTotal
+
+"""
+
 from scapy.config import conf
 conf.ipv6_enabled = False
 from kamene.config import conf
@@ -33,6 +42,17 @@ API_KEY_SHODAN = os.getenv("API_KEY_SHODAN")
 
 
 class MitmSniffer:
+    """
+        MitmSniffer class:
+            -filter:
+                define what tcpdump like filter you want to implement
+            -interface:
+               on which interface you want to work
+            -file_name:
+               the name of the pcap file were sniffed data will be saved
+            -pkts:
+               internal packet list
+    """
 
     def __init__(self, filter, interface, file_name):
         self.filter = filter
@@ -40,27 +60,64 @@ class MitmSniffer:
         self.file_name = file_name
         self.pkts = []
 
-    '''func that creates a pcap with the internal pkt list'''
 
-    def pcap_generator(self):
-        try:
-            for i in tqdm(self.pkts, desc="file generation --> {}".format(self.file_name)):
-                wrpcap(self.file_name, i, append=True)
-            return True
-        except:
-            return False
+    def pcap_generator(self, pkt_list = None):
+        """
+        Return True if the function can create a pcap with the given list,
+        else you can optionally pass to it a list and it will try to generate the relative pcap
 
-    '''function that resolves an hostname when given in the first ip finded'''
+        Parameters
+        ----------
+        self
+            An instance of the class where there is a fulfilled pkts list, usually no one needs to define it
+        pkt_list
+            A list of tcpdump like capture, if it is not defined the function tries to use the internal
+            list of the class
+        """
+        result = False
+        if pkt_list:
+            try:
+                for i in tqdm(pkt_list, desc="file generation --> {}".format(self.file_name)):
+                    wrpcap(self.file_name, i, append=True)
+                result = True
+            except:
+                result = False
+        else:
+            try:
+                for i in tqdm(self.pkts, desc="file generation --> {}".format(self.file_name)):
+                    wrpcap(self.file_name, i, append=True)
+                result = True
+            except:
+                result = False
+        return result
 
-    def hostname_resolves(self, hostname):
+    def hostname_resolver(self, hostname):
+        """
+        Return the first ip solved by gethostbyname function of python
+
+        Parameters
+        ----------
+
+        hostname
+            A string containing the URI that you want to resolve
+        """
         try:
             return socket.gethostbyname(hostname)
         except socket.error:
             return 0
 
-    '''function used to exctract relevant data from the given research'''
 
     def evidence_extractor(self, data):
+        """
+        Return a dictionary that contains all the evidence extracted by the given
+        VirusTotal report like json
+
+        Parameters
+        ----------
+
+        data
+            JSON like object returned by VirusTotalApi
+        """
         evidence = {}
         if 'additional_info' in data:
             if data.get('additional_info').get('embedded_domains') is not None:
@@ -79,9 +136,12 @@ class MitmSniffer:
         return evidence
 
 
-    '''verify and set the network options'''
+    """verify and set the network options"""
 
     def set_net_opt(self):
+        """
+        Return true if it can set in a proper way all the net option needed to run mitmproxy correctly
+        """
         print("Enabling ip forwarding...")
         enable_ip_forwarding = "sysctl -w net.ipv4.ip_forward=1"
         disable_icmp_redirects = "sysctl -w net.ipv4.conf.all.send_redirects=1"
@@ -89,26 +149,39 @@ class MitmSniffer:
         nat_port_80 = "iptables -t nat -A PREROUTING -i " + self.interface + " -p tcp --dport 80 -j REDIRECT --to-port 8080"
         nat_port_443 = "iptables -t nat -A PREROUTING -i " + self.interface + " -p tcp --dport 443 -j REDIRECT --to-port 8080"
         if send_cmd(enable_ip_forwarding, False) and send_cmd(nat_port_80, False) and send_cmd(nat_port_443, False) and send_cmd(disable_icmp_redirects, False):
-            return "Net options applied successfully!"
+            return True
         else:
-            return "Sorry, the program has some problems in setting up the propers network options!"
+            return False
 
-    '''sniff the all the specified packet with scapy sniff function'''
+    """sniff the all the specified packet with scapy sniff function"""
 
-    def sniffer(self):
+    def _sniffer_(self):
+        """
+        This func is implemented in an async way to permit the sniffing while mitmproxy and Frida are working,
+        it is defined as an internal function
+        """
         sn = sniff(filter=self.filter, iface=self.interface, prn=lambda x: (x.summary().rstrip('\r'), self.pkts.append(x)))
 
     def start_sniffing(self):
+        """
+        This function initializes the async sniffing of the traffic that comes from the selected ip
+        then sets the net options calling the relative function and starts mitmproxy
+        """
         print("press 'Q' to quit sniffing")
 
-        ''' start the sniffer implemented with scapy '''
+        """ start the sniffer implemented with scapy """
         self.pkts = Manager().list()
-        sniffing = Process(target=self.sniffer, args=self.pkts)
+        sniffing = Process(target=self._sniffer_, args=self.pkts)
         sniffing.start()
 
-        ''' set the proper net options '''
-        print(self.set_net_opt())
-        '''start mitmproxy'''
+        """ set the proper net options """
+        if self.set_net_opt():
+            print ("Net options applied successfully!")
+        else:
+            print("Sorry, the program has some problems in setting up the propers network options!")
+            sys.exit(1)
+
+        """start mitmproxy"""
         if send_cmd('SSLKEYLOGFILE="$PWD/.mitmproxy/sslkeylogfile.txt"  mitmproxy --mode transparent --showhost', output_needed=False, new_shell=True):
             print("Mitmproxy started correctly")
 
@@ -124,11 +197,41 @@ class MitmSniffer:
             except:
                 pass
 
-    '''function that analyzes with various api the pcap file creating a json'''
+    def _shodan_report_(self, evidence):
+        """
+        Return True if the call to the shodan API has worked properly
+        """
+        try:
+            api = Shodan(API_KEY_SHODAN)
+            ips = []
+
+            for key, val in tqdm(evidence.items(), desc="Hostname resolution"):
+                if "ip" not in key:
+                    ips.append(self.hostname_resolver(val))
+                else:
+                    ips.append(val)
+
+            ip_info = {}
+            for key, val in tqdm(enumerate(ips), desc="Wait for Shodan report", total=len(ips)):
+                try:
+                    ip_info['ip'+str(key)] = api.host(val)
+                    json_writer("./shodan_report/ip"+str(key), ip_info['ip'+str(key)])
+                except Exception as e:
+                    print('Error: {}: {}'.format(val, e), end="\r")
+                    pass
+                time.sleep(2)
+
+        except Exception as e:
+            print('Error: {}'.format(e))
+            sys.exit(1)
+        return True
 
     def packets_analysis(self):
+        """
+        Return True if all the scans with VirusTotal and shodan API have success. It creates the report of virus total in JSON format
+        in the root of the program, then saves the other results in vt_url_report and shodan_report folder shodan results
+        """
 
-        '''send a scan to vt api and return the report about the given file'''
         vt = VirusTotalApi()
         upload = vt.scan(self.file_name)
         print("Uploading the file...")
@@ -150,7 +253,7 @@ class MitmSniffer:
         else:
             print(upload.json()['verbose_msg'])
 
-        '''evidence extractor'''
+        """evidence extractor"""
         evidence = self.evidence_extractor(report_ok.json())
         try:
             json_writer("evidence", evidence)
@@ -158,40 +261,19 @@ class MitmSniffer:
         except Exception as e:
             print("Error: {}".format(e))
 
-
-
-        '''domain report of the exctracted domains visited'''
+        """domain report of the exctracted domains visited"""
         for key, val in tqdm(evidence.items(), desc="Generating a report for each evidence"):
             url_report = vt.url_report(val, True, True)
             if url_report.status_code == 200:
                 json_writer("./vt_url_report/report_" + key, url_report.json())
 
-        '''SHODAN API
-        a future upgrade could be implementing search filter by becoming a Shodan member'''
-
-        try:
-            api = Shodan(API_KEY_SHODAN)
-            ips = []
-
-            for key, val in tqdm(evidence.items(), desc="Hostname resolution"):
-                if "ip" not in key:
-                    ips.append(self.hostname_resolves(val))
-                else:
-                    ips.append(val)
-
-            ip_info = {}
-            for key, val in tqdm(enumerate(ips), desc="Wait for Shodan report", total=len(ips)):
-                try:
-                    ip_info['ip'+str(key)] = api.host(val)
-                    json_writer("./shodan_report/ip"+str(key), ip_info['ip'+str(key)])
-                except Exception as e:
-                    print('Error: {}: {}'.format(val, e), end="\r")
-                    pass
-                time.sleep(2)
+        """SHODAN API
+        a future upgrade could be implementing search filter by becoming a Shodan member"""
+        if self._shodan_report_(evidence):
+            print("Shodan research terminated correctly!")
+            return True
+        else:
+            return False
 
 
-
-        except Exception as e:
-            print('Error: {}'.format(e))
-            sys.exit(1)
 

@@ -50,8 +50,4 @@ def json_writer(file_name, json_obj):
 
 
 def concatenate_list_data(list):
-    # result= ''
-    # for element in list:
-    #     result += str(element)
-    # return result
     return ''.join(list)

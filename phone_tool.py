@@ -1,5 +1,11 @@
-'''this class in an attempt to make a general class that can operate with adb
-using all the things needed to inject a cert in an app to bypass ssl pinning'''
+"""
+phone_tool.py
+====================================
+
+Another core module of the framework. This class in an attempt to make a general object that can operate with adb
+using all the things needed to inject a cert in an app to bypass ssl pinning using frida-gadjet
+
+"""
 
 from utils import *
 import lief
@@ -25,6 +31,13 @@ gadget_architecture = {
 
 
 class PhoneTool:
+    """
+        PhoneTool class:
+            -app_name:
+                define the name of the app that you want to inject
+            -if the phone using adb via network, you can provide an ip address, at the moment this is not implemeted yet:
+               on which interface you want to work
+    """
 
     def __init__(self, app_name, ip=None):
         self.app_name = app_name
@@ -33,8 +46,11 @@ class PhoneTool:
         if ip:
             self.ip = ip
 
-    '''list and search for the given package in the phone, then moves it in the download folder to be able of pulling it'''
     def select_package(self):
+        """
+        List and search for the given package in the phone, then moves it in the download folder to be able of pulling it
+        on the phones that has no root permissions
+        """
         select_apk = "adb shell pm list packages -f | grep " + self.app_name
         output = send_cmd(select_apk)
         if output:
@@ -47,17 +63,35 @@ class PhoneTool:
             if pull_apk:
                 print("Apk pulled successfully! File path is:", os.getcwd() + "/apk/base_" + self.package_name + ".apk")
                 return os.getcwd() + "/apk/base_" + self.package_name + ".apk"
+            print("Somenthing went wrong in retriving the selected package!")
+            return False
+        print("Cannot find the selected package!")
+        return False
 
-    '''will be needed for rooted devices, freeda needs that for hooking the certificate in the apps'''
+    ''''''
     @staticmethod
     def inject_mitm_cert():
+        """
+        Will be needed for rooted devices, freda needs that for hooking the certificate in the apps
+        """
         cert_path = input("Enter .mitmproxy folder path: ")
         inj = "adb push " + cert_path + "mitmproxy-ca-cert.cer /data/local/tmp/cert-der.crt"
         print(send_cmd(inj, output_needed=True))
 
-    '''this function provides a coorect version of gadjet and inject it into the apk'''
+
     @staticmethod
     def inject(libdir, arch, selected_library):
+        """
+        This function provides a corect version of gadjet and inject it into the apk
+
+        Parameters
+        ----------
+        self
+            An instance of the class where there is a fulfilled pkts list, usually no one needs to define it
+        pkt_list
+            A list of tcpdump like capture, if it is not defined the function tries to use the internal
+            list of the class
+        """
         # Get latests frida-gadgets
         #latest = requests.get(url="https://github.com/frida/frida/releases/latest")
         latest = requests.get(url="https://github.com/frida/frida/releases/tag/12.6.1")

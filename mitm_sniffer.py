@@ -2,40 +2,22 @@
 mitm_sniffer.py
 ====================================
 One of the core module of my project, here we initialize mitmproxy with the paramater given in the constructor
-and scapy tcpdump like sniffing. Before doing it, i've made some function to set the proper netwok parameter were the
-program is executing, like iptables and the main API for Shodan and VirusTotal
+and scapy tcpdump like sniffing. Before doing it, i've made some function to set the proper network parameter on the machine where the
+program is executed, like iptables and the main API for Shodan and VirusTotal
 
 """
-
-from scapy.config import conf
-conf.ipv6_enabled = False
-from kamene.config import conf
-conf.ipv6_enabled = False
-from kamene.all import *
 from scapy.all import *
-import keyboard
-from mitmproxy import proxy, options, ctx, http
-from mitmproxy.tools.dump import DumpMaster
-from multiprocessing import *
 from tqdm import tqdm
-import os
-import settings
-from pathlib import Path
-import requests
 from shodan import Shodan
 from virus_total_api import VirusTotalApi
-import dns.zone
-import dns.ipv4
-import os.path
-import sys
-import sslkeylog
-from utils import send_cmd, cmp, json_writer
-import mitmproxy.http
+import sys, os, requests, keyboard, settings
+from utils import send_cmd, json_writer
+#todo verificare quale import è necessario
 
 
 
 load_layer("http")
-
+scapy.config.ipv6_enabled = False
 API_KEY_PACKET_TOTAL = os.getenv("API_KEY_PACKET_TOTAL")
 API_KEY_SHODAN = os.getenv("API_KEY_SHODAN")
 
@@ -153,26 +135,12 @@ class MitmSniffer:
         else:
             return False
 
-    """sniff the all the specified packet with scapy sniff function"""
-
-    def _sniffer_(self):
-        """
-        This func is implemented in an async way to permit the sniffing while mitmproxy and Frida are working,
-        it is defined as an internal function
-        """
-        sn = sniff(filter=self.filter, iface=self.interface, prn=lambda x: (x.summary().rstrip('\r'), self.pkts.append(x)))
-
     def start_sniffing(self):
         """
         This function initializes the async sniffing of the traffic that comes from the selected ip
         then sets the net options calling the relative function and starts mitmproxy
         """
         print("press 'Q' to quit sniffing")
-
-        """ start the sniffer implemented with scapy """
-        self.pkts = Manager().list()
-        sniffing = Process(target=self._sniffer_, args=self.pkts)
-        sniffing.start()
 
         """ set the proper net options """
         if self.set_net_opt():
@@ -181,6 +149,9 @@ class MitmSniffer:
             print("Sorry, the program has some problems in setting up the propers network options!")
             sys.exit(1)
 
+        sniffing = AsyncSniffer(filter=self.filter, iface=self.interface, prn=lambda x: (x.summary().rstrip('\r'), self.pkts.append(x)))
+        sniffing.start()
+
         """start mitmproxy"""
         if send_cmd('SSLKEYLOGFILE="$PWD/.mitmproxy/sslkeylogfile.txt"  mitmproxy --mode transparent --showhost', output_needed=False, new_shell=True):
             print("Mitmproxy started correctly")
@@ -188,8 +159,8 @@ class MitmSniffer:
         while True:
             try:
                 if keyboard.is_pressed('q'):
+                    sniffing.stop()
                     print("\nThanks for sniffing with me ;)")
-                    sniffing.terminate()
                     self.pcap_generator()
                     break
                 else:

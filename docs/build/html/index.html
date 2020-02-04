@@ -35,8 +35,8 @@
 <div class="section" id="mitm-sniffer-py">
 <h2>mitm_sniffer.py<a class="headerlink" href="#mitm-sniffer-py" title="Permalink to this headline">¶</a></h2>
 <p>One of the core module of my project, here we initialize mitmproxy with the paramater given in the constructor
-and scapy tcpdump like sniffing. Before doing it, i’ve made some function to set the proper netwok parameter were the
-program is executing, like iptables and the main API for Shodan and VirusTotal</p>
+and scapy tcpdump like sniffing. Before doing it, i’ve made some function to set the proper network parameter on the machine where the
+program is executed, like iptables and the main API for Shodan and VirusTotal</p>
 <dl class="class">
 <dt id="mitm_sniffer.MitmSniffer">
 <em class="property">class </em><code class="sig-prename descclassname">mitm_sniffer.</code><code class="sig-name descname">MitmSniffer</code><span class="sig-paren">(</span><em class="sig-param">filter</em>, <em class="sig-param">interface</em>, <em class="sig-param">file_name</em><span class="sig-paren">)</span><a class="headerlink" href="#mitm_sniffer.MitmSniffer" title="Permalink to this definition">¶</a></dt>
@@ -114,6 +114,11 @@ then sets the net options calling the relative function and starts mitmproxy</p>
 
 </dd></dl>
 
+</div>
+<span class="target" id="module-phone_tool"></span><div class="section" id="phone-tool-py">
+<h2>phone_tool.py<a class="headerlink" href="#phone-tool-py" title="Permalink to this headline">¶</a></h2>
+<p>Another core module of the framework. This class in an attempt to make a general object that can operate with adb
+using all the things needed to inject a cert in an app to bypass ssl pinning using frida-gadjet</p>
 </div>
 <div class="toctree-wrapper compound">
 </div>

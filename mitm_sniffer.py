@@ -12,8 +12,6 @@ from shodan import Shodan
 from virus_total_api import VirusTotalApi
 import sys, os, requests, keyboard, settings
 from utils import send_cmd, json_writer
-#todo verificare quale import è necessario
-
 
 
 load_layer("http")

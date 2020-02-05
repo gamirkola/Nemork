@@ -35,14 +35,14 @@ class PhoneTool:
         PhoneTool class:
             -app_name:
                 define the name of the app that you want to inject
-            -if the phone using adb via network, you can provide an ip address, at the moment this is not implemeted yet:
-               on which interface you want to work
+            -ip:
+                if the phone using adb via network, you can provide an ip address, at the moment this is not implemeted yet:
+                on which interface you want to work
     """
 
     def __init__(self, app_name, ip=None):
         self.app_name = app_name
-        self.package_name = ""
-        '''ip is not used but will be neede for a future upgrade'''
+        self.package_name = ''
         if ip:
             self.ip = ip
 
@@ -68,7 +68,6 @@ class PhoneTool:
         print("Cannot find the selected package!")
         return False
 
-    ''''''
     @staticmethod
     def inject_mitm_cert():
         """
@@ -82,15 +81,16 @@ class PhoneTool:
     @staticmethod
     def inject(libdir, arch, selected_library):
         """
-        This function provides a corect version of gadjet and inject it into the apk
+        This function provides a correct version of gadjet and inject it into the apk
 
         Parameters
         ----------
-        self
-            An instance of the class where there is a fulfilled pkts list, usually no one needs to define it
-        pkt_list
-            A list of tcpdump like capture, if it is not defined the function tries to use the internal
-            list of the class
+        libdir
+            Dir of the decompressed APK containing the app libraries
+        arch
+            The architecture of the phone where the app will be installed
+        selected_library
+            The library in which the user decided to inject frida-gadjet
         """
         # Get latests frida-gadgets
         #latest = requests.get(url="https://github.com/frida/frida/releases/latest")
@@ -124,6 +124,16 @@ class PhoneTool:
 
     '''this func operates on the apk in order to be able to inject gadget, so decompress it, verify the libraries and then calls  inject'''
     def apk_operation(self, pkg = None):
+        """
+        This function is used to get the apk, extract it, find the used libraries and architectures,
+        than it calls the inject function with the correct statements in order to perform the frida gadjet injection
+        and creates a new infected APK ready to be signed
+
+        Parameters
+        ----------
+        pkg
+            if a path to a package is provided, the method will operate on the given apk, otherwise it will ask for a path
+        """
         # Get file
         if pkg is None:
             apk = input("[+] Enter the path of your APK: ")
@@ -151,9 +161,9 @@ class PhoneTool:
 
         print("[+] Select the architecture of your system: ")
 
-        arch = send_cmd("adb shell getprop ro.product.cpu.abi")
-        if arch:
-            print("Your current architecture is: ", arch)
+        arc = send_cmd("adb shell getprop ro.product.cpu.abi")
+        if arc:
+            print("Your current architecture is: ", arc)
 
 
         architectures = os.listdir(libdir)
@@ -206,6 +216,10 @@ class PhoneTool:
 
     '''function made to sign the apk, if it has already created a keystore, uses it, otherwise it will create a keystore'''
     def signer(self):
+        """
+        This method is needed to resign the apk after the injection is done in order to be able to install it again,
+        it creates a keystore if the user haven't done it yet, and the uses it to sign the new APK
+        """
         if os.path.exists(os.getcwd() + "my-release-key.keystore"):
             keystore_gen = send_cmd("keytool -genkey -v -keystore my-release-key.keystore -alias alias_name -keyalg RSA -keysize 2048 -validity 10000",True)
             if keystore_gen:
@@ -217,8 +231,11 @@ class PhoneTool:
         if sign:
             print(sign)
 
-    '''i know that's a funny name, this function pushes in to do phone the new infected app'''
     def pusher(self):
+        """
+        I know that's a funny name, but this function pushes (as ADB command) in to do phone the new infected app, and before doing it, it uninstalls the old version
+        of the package
+        """
         '''before pushing the new app we have to uninstall the old version of it'''
         print("Trying to uninstall the original app from the phone...")
         un = send_cmd("adb uninstall " + self.package_name, True)
@@ -230,8 +247,11 @@ class PhoneTool:
         if ins:
             print(ins)
 
-    '''this func listen when a infected app is ready and starts the frida hooking for SSL pinning bypass'''
-    def frida_starter(self):
+    @staticmethod
+    def frida_starter():
+        """
+        This method waits untill the infected app is ready and open on the phone and starts the frida hooking for SSL pinning bypass
+        """
         #todo try to star the app from here
         print("Start the app on the phone...")
         pid = False

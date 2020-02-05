@@ -119,6 +119,82 @@ then sets the net options calling the relative function and starts mitmproxy</p>
 <h2>phone_tool.py<a class="headerlink" href="#phone-tool-py" title="Permalink to this headline">¶</a></h2>
 <p>Another core module of the framework. This class in an attempt to make a general object that can operate with adb
 using all the things needed to inject a cert in an app to bypass ssl pinning using frida-gadjet</p>
+<dl class="class">
+<dt id="phone_tool.PhoneTool">
+<em class="property">class </em><code class="sig-prename descclassname">phone_tool.</code><code class="sig-name descname">PhoneTool</code><span class="sig-paren">(</span><em class="sig-param">app_name</em>, <em class="sig-param">ip=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phone_tool.PhoneTool" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>PhoneTool class:</dt><dd><dl class="simple">
+<dt>-app_name:</dt><dd><p>define the name of the app that you want to inject</p>
+</dd>
+<dt>-ip:</dt><dd><p>if the phone using adb via network, you can provide an ip address, at the moment this is not implemeted yet:
+on which interface you want to work</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="method">
+<dt id="phone_tool.PhoneTool.apk_operation">
+<code class="sig-name descname">apk_operation</code><span class="sig-paren">(</span><em class="sig-param">pkg=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phone_tool.PhoneTool.apk_operation" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function is used to get the apk, extract it, find the used libraries and architectures,
+than it calls the inject function with the correct statements in order to perform the frida gadjet injection
+and creates a new infected APK ready to be signed</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>pkg</strong> – if a path to a package is provided, the method will operate on the given apk, otherwise it will ask for a path</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="phone_tool.PhoneTool.frida_starter">
+<em class="property">static </em><code class="sig-name descname">frida_starter</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phone_tool.PhoneTool.frida_starter" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method waits untill the infected app is ready and open on the phone and starts the frida hooking for SSL pinning bypass</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="phone_tool.PhoneTool.inject">
+<em class="property">static </em><code class="sig-name descname">inject</code><span class="sig-paren">(</span><em class="sig-param">libdir</em>, <em class="sig-param">arch</em>, <em class="sig-param">selected_library</em><span class="sig-paren">)</span><a class="headerlink" href="#phone_tool.PhoneTool.inject" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function provides a correct version of gadjet and inject it into the apk</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>libdir</strong> – Dir of the decompressed APK containing the app libraries</p></li>
+<li><p><strong>arch</strong> – The architecture of the phone where the app will be installed</p></li>
+<li><p><strong>selected_library</strong> – The library in which the user decided to inject frida-gadjet</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="phone_tool.PhoneTool.inject_mitm_cert">
+<em class="property">static </em><code class="sig-name descname">inject_mitm_cert</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phone_tool.PhoneTool.inject_mitm_cert" title="Permalink to this definition">¶</a></dt>
+<dd><p>Will be needed for rooted devices, freda needs that for hooking the certificate in the apps</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="phone_tool.PhoneTool.pusher">
+<code class="sig-name descname">pusher</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phone_tool.PhoneTool.pusher" title="Permalink to this definition">¶</a></dt>
+<dd><p>I know that’s a funny name, but this function pushes (as ADB command) in to do phone the new infected app, and before doing it, it uninstalls the old version
+of the package</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="phone_tool.PhoneTool.select_package">
+<code class="sig-name descname">select_package</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phone_tool.PhoneTool.select_package" title="Permalink to this definition">¶</a></dt>
+<dd><p>List and search for the given package in the phone, then moves it in the download folder to be able of pulling it
+on the phones that has no root permissions</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="phone_tool.PhoneTool.signer">
+<code class="sig-name descname">signer</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phone_tool.PhoneTool.signer" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method is needed to resign the apk after the injection is done in order to be able to install it again,
+it creates a keystore if the user haven’t done it yet, and the uses it to sign the new APK</p>
+</dd></dl>
+
+</dd></dl>
+
 </div>
 <div class="toctree-wrapper compound">
 </div>

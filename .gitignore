@@ -4,3 +4,8 @@
 *.json
 *.apk
 *.txt
+bin
+lib
+lib64
+tmp
+share

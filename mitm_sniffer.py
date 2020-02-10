@@ -151,7 +151,7 @@ class MitmSniffer:
         sniffing.start()
 
         """start mitmproxy"""
-        if send_cmd('SSLKEYLOGFILE="$PWD/.mitmproxy/sslkeylogfile.txt"  mitmproxy --mode transparent --showhost', output_needed=False, new_shell=True):
+        if send_cmd('SSLKEYLOGFILE="$PWD/mitmproxy/sslkeylogfile.txt"  mitmproxy --mode transparent --showhost', output_needed=False, new_shell=True):
             print("Mitmproxy started correctly")
 
         while True:

@@ -73,7 +73,7 @@ class PhoneTool:
         """
         Will be needed for rooted devices, freda needs that for hooking the certificate in the apps
         """
-        cert_path = input("Enter .mitmproxy folder path: ")
+        cert_path = input("Enter mitmproxy folder path: ")
         inj = "adb push " + cert_path + "mitmproxy-ca-cert.cer /data/local/tmp/cert-der.crt"
         print(send_cmd(inj, output_needed=True))
 

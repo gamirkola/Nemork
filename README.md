@@ -1,6 +1,6 @@
 # Nemork
 
-Network Mitm Framework for traffic analisys and vulnerabiity assesment.
+Network Mitm Framework for traffic analisys and vulnerability assesment.
 
 ## Getting Started
 
@@ -9,16 +9,16 @@ The main file are mitm_sniffer.py and phone_tool.py, you can see an example of u
 
 ### Prerequisites
 
-The main requirements for this framework are defined in requirements.txt file, you'll nedd to run the libraries under python3.
-You can find some usefull documentation in docs/build/html folder, as soon as possible i will host it on a web server including here the link.
-In order to make Virustotal and Shodan API ork properly you'll need to create a file in the root folder called .env where will be stored the API key in this format:
+The main requirements for this framework are defined in requirements.txt file, you'll need to run the libraries under python3.
+You can find some useful documentation in docs/build/html folder, as soon as possible i will host it on a web server including here the link.
+In order to make Virustotal and Shodan API work properly you'll need to create a file in the root folder called .env where will be stored the API key in this format:
 
 
 ```
 API_KEY_VIRUS_TOTAL = yourapikey
 API_KEY_SHODAN = yourapikey
 ```
-the guarantee the full support for Virustotal API you'll need the pro version of it.
+To guarantee the full support for Virustotal API you'll need the pro version of it.
 
 ### Usage
 

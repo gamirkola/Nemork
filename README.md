@@ -25,15 +25,6 @@ To guarantee the full support for Virustotal API you'll need the pro version of 
 The framework is thought to be used stand alone or as a library in other application, so you can import the folder calling the main functions as described in test.py file, this file shows the correct flow of execution that you need to use in order to make all the function of the framework work properly, so 
 but you can use also in a different ways depending on your needs.
 
-```
-
-```
-
-
-```
-
-```
-
 This is an example of output:
 
 ```
@@ -51,11 +42,11 @@ Scan request successfully queued
 Please wait for the file report!
 ```
 
-as you can see it also makes some changes to your OS environment to make the proxy work trasparently and in a correct way
+as you can see it also makes some changes to your OS environment to make the proxy work trasparently and in a correct way.
 
-## Deployment
+## Field of application
 
-This system is thought to be used in general for forensics and security purposes
+This system is thought to be used in general for forensics and security purposes.
 
 
 ## Built With

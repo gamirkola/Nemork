@@ -9,3 +9,6 @@ lib
 lib64
 tmp
 share
+make.bat
+Makefile
+source

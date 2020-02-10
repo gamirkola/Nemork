@@ -1,32 +1,34 @@
 # Nemork
 
-Network Mitm Framework for traffic analisys and vulnerabiity assesment
+Network Mitm Framework for traffic analisys and vulnerabiity assesment.
 
 ## Getting Started
 
 You can use this program as a library in an external project, or use it stand alone, with some simple instruction in a .py file. 
-The main file are MitmSniffer.py and VirusTotal.py, you can see an example of usage in test.py
+The main file are mitm_sniffer.py and phone_tool.py, you can see an example of usage in test.py.
 
 ### Prerequisites
 
-I have to prepare the prerequisites section in a better way, i wiull do it after the testing e developemente are quite done… for now you just need python3 or above, mtmproxy framework, scapy and kamene, tqdm… 
+The main requirements for this framework are defined in requirements.txt file, you'll nedd to run the libraries under python3.
+You can find some usefull documentation in docs/build/html folder, as soon as possible i will host it on a web server including here the link.
+In order to make Virustotal and Shodan API ork properly you'll need to create a file in the root folder called .env where will be stored the API key in this format:
+
 
 ```
-pip install kamene
-pip install mitmproxy
-pip insstall scapy
-pip install tqdm
+API_KEY_VIRUS_TOTAL = yourapikey
+API_KEY_SHODAN = yourapikey
+```
+the guarantee the full support for Virustotal API you'll need the pro version of it.
+
+### Usage
+
+The framework is thought to be used stand alone or as a library in other application, so you can import the folder calling the main functions as described in test.py file, this file shows the correct flow of execution that you need to use in order to make all the function of the framework work properly, so 
+but you can use also in a different ways depending on your needs.
 
 ```
 
-### Installing
-
-Better description will be given....
-
 ```
 
-```
-...
 
 ```
 
@@ -53,14 +55,14 @@ as you can see it also makes some changes to your OS environment to make the pro
 
 ## Deployment
 
-This system will be used in general for forensics purposes, 
+This system is thought to be used in general for forensics and security purposes
 
 
 ## Built With
 
 * **[Mitmproxy](https://mitmproxy.org/) - The proxy used**
 * **[Frida](https://frida.re/) - Bypass ssl pinning**
-* **[Scapy/kamene](https://scapy.net/) - For the tcpdump like sniffing, kamene is only a py3 porting**
+* **[Scapy](https://scapy.net/) - For the tcpdump like sniffing**
 
 ## Contributing
 

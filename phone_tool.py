@@ -220,13 +220,15 @@ class PhoneTool:
         This method is needed to resign the apk after the injection is done in order to be able to install it again,
         it creates a keystore if the user haven't done it yet, and the uses it to sign the new APK
         """
-        if os.path.exists(os.getcwd() + "my-release-key.keystore"):
+        if not os.path.exists(os.getcwd() + "my-release-key.keystore"):
+            print("You don't have a keystore, it will be created now...")
             keystore_gen = send_cmd("keytool -genkey -v -keystore my-release-key.keystore -alias alias_name -keyalg RSA -keysize 2048 -validity 10000",True)
             if keystore_gen:
                 print(keystore_gen)
         else:
             print("You already have a keystore, if it's not working try to refactor it...")
         time.sleep(3)
+        print("Proceeding signing APK")
         sign = send_cmd("jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore my-release-key.keystore base_" + self.package_name + "_infected.apk alias_name", True)
         if sign:
             print(sign)

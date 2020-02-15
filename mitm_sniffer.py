@@ -133,9 +133,17 @@ class MitmSniffer:
         else:
             return False
 
+    def mitmproxy_starter(self):
+        """
+        This function starts mitmproxy
+        """
+        if send_cmd('SSLKEYLOGFILE="$PWD/mitmproxy/sslkeylogfile.txt"  mitmproxy --mode transparent --showhost', output_needed=False, new_shell=True):
+            print("Mitmproxy started correctly")
+            return True
+
     def start_sniffing(self):
         """
-        This function initializes the async sniffing of the traffic that comes from the selected ip
+        This function initializes the async sniffing of the traffic that comes from the selected filter
         then sets the net options calling the relative function and starts mitmproxy
         """
         print("press 'Q' to quit sniffing")
@@ -149,10 +157,6 @@ class MitmSniffer:
 
         sniffing = AsyncSniffer(filter=self.filter, iface=self.interface, prn=lambda x: (x.summary().rstrip('\r'), self.pkts.append(x)))
         sniffing.start()
-
-        """start mitmproxy"""
-        if send_cmd('SSLKEYLOGFILE="$PWD/mitmproxy/sslkeylogfile.txt"  mitmproxy --mode transparent --showhost', output_needed=False, new_shell=True):
-            print("Mitmproxy started correctly")
 
         while True:
             try:

@@ -18,10 +18,12 @@ from phone_tool import PhoneTool
 #push the new app in the phone
 # pn.pusher()
 #initialize the MitmSniffer
-sn = MitmSniffer("ip host 192.168.0.156", "eth0", "sniffing.pcap")
+sn = MitmSniffer("", "eth0", "sniffing.pcap")
 #start frida for ssl pinning
 # pn.frida_starter()
-#start tcpdump like sniff with scapy and mitmproxy
+#start mitmproxy
+sn.mitmproxy_starter()
+#start tcpdump like sniff implemented with scapy
 sn.start_sniffing()
 #analize the packets with virus total an shodan
 sn.packets_analysis()

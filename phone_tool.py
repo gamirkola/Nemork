@@ -36,8 +36,7 @@ class PhoneTool:
             -app_name:
                 define the name of the app that you want to inject
             -ip:
-                if the phone using adb via network, you can provide an ip address, at the moment this is not implemeted yet:
-                on which interface you want to work
+                if the phone using adb via network, you can provide an ip address, at the moment this is not implemeted yet
     """
 
     def __init__(self, app_name, ip=None):

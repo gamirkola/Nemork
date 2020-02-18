@@ -135,8 +135,15 @@ class MitmSniffer:
 
     def mitmproxy_starter(self):
         """
-        This function starts mitmproxy
+        This function starts mitmproxy setting the correct net options
         """
+        """ set the proper net options """
+        if self.set_net_opt():
+            print("Net options applied successfully!")
+        else:
+            print("Sorry, the program has some problems in setting up the propers network options!")
+            sys.exit(1)
+
         if send_cmd('SSLKEYLOGFILE="$PWD/mitmproxy/sslkeylogfile.txt"  mitmproxy --mode transparent --showhost', output_needed=False, new_shell=True):
             print("Mitmproxy started correctly")
             return True
@@ -147,13 +154,6 @@ class MitmSniffer:
         then sets the net options calling the relative function and starts mitmproxy
         """
         print("press 'Q' to quit sniffing")
-
-        """ set the proper net options """
-        if self.set_net_opt():
-            print ("Net options applied successfully!")
-        else:
-            print("Sorry, the program has some problems in setting up the propers network options!")
-            sys.exit(1)
 
         sniffing = AsyncSniffer(filter=self.filter, iface=self.interface, prn=lambda x: (x.summary().rstrip('\r'), self.pkts.append(x)))
         sniffing.start()

@@ -25,7 +25,7 @@ class MitmSniffer:
     """
         MitmSniffer class:
             -filter:
-                define what tcpdump like filter you want to implement
+                define what BPF like filter you want to implement
             -interface:
                on which interface you want to work
             -file_name:
@@ -84,7 +84,7 @@ class MitmSniffer:
         try:
             return socket.gethostbyname(hostname)
         except socket.error:
-            return 0
+            return "Error in hostname resolution!"
 
 
     def evidence_extractor(self, data):
@@ -199,14 +199,17 @@ class MitmSniffer:
             sys.exit(1)
         return True
 
-    def packets_analysis(self):
+    def packets_analysis(self, pcap_file = None):
         """
         Return True if all the scans with VirusTotal and shodan API have success. It creates the report of virus total in JSON format
         in the root of the program, then saves the other results in vt_url_report and shodan_report folder shodan results
         """
 
         vt = VirusTotalApi()
-        upload = vt.scan(self.file_name)
+        if pcap_file is not None:
+            upload = vt.scan(pcap_file)
+        else:
+            upload = vt.scan(self.file_name)
         print("Uploading the file...")
         json_writer("virus_total_upload_info", upload.json())
         if upload.status_code == 200 or upload.json()['response_code'] == 1:

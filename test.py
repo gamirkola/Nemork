@@ -22,7 +22,7 @@ sn = MitmSniffer("", "eth0", "sniffing.pcap")
 #start frida for ssl pinning
 # pn.frida_starter()
 #start mitmproxy
-sn.mitmproxy_starter()
+#sn.mitmproxy_starter()
 #start tcpdump like sniff implemented with scapy
 sn.start_sniffing()
 #analize the packets with virus total an shodan

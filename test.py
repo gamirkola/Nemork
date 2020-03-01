@@ -1,13 +1,11 @@
-#!/usr/bin/python3.7
-
 from mitm_sniffer import MitmSniffer
 from phone_tool import PhoneTool
 
 #select the app
-app = input("insert the name of the app you want to inject: ")
+#app = input("insert the name of the app you want to inject: ")
 #initialize a PhoneTool class with the selected app
-pn = PhoneTool(app.strip())
-pn.generate_pinning_script(renew=True)
+#pn = PhoneTool(app.strip())
+#pn.generate_pinning_script(renew=True)
 #copy in a readable folder the apk
 #pkg = pn.select_package()
 #inject the frida gadget in the app
@@ -28,5 +26,3 @@ pn.generate_pinning_script(renew=True)
 #sn.start_sniffing()
 #analize the packets with virus total an shodan
 #sn.packets_analysis()
-
-

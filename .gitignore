@@ -9,3 +9,4 @@ lib
 lib64
 tmp
 share
+__pycache__

@@ -55,8 +55,9 @@ class PhoneTool:
         if output:
             self.package_name = output.split("=").pop(-1)
             print("Package name: ", self.package_name)
-            cp = send_cmd("adb shell cp " + output.partition("=")[0].strip("package:")
-                              + "apk /storage/emulated/0/Download/base_" + self.package_name + ".apk")
+            o = output.rindex('=')
+            cp = send_cmd("adb shell cp " + output[8:o]
+                              + " /storage/emulated/0/Download/base_" + self.package_name + ".apk")
             pull_apk = send_cmd("adb pull /storage/emulated/0/Download/base_"+ self.package_name +".apk",
                                 output_needed=False, cwd="apk")
             if pull_apk:
@@ -76,6 +77,57 @@ class PhoneTool:
         inj = "adb push " + cert_path + "mitmproxy-ca-cert.cer /data/local/tmp/cert-der.crt"
         print(send_cmd(inj, output_needed=True))
 
+    ''' generate a js string containig mitmproxy cert'''
+    def _gen_js_cert_(self, cert_path = None):
+        if cert_path:
+            with open(cert_path + "mitmproxy-ca-cert.cer", 'r') as file:
+                lines = file.read().splitlines()
+                last_line = lines[-1]
+                js_style_cert = 'var cert = String.$new("'
+                for l in lines:
+                    if l == last_line:
+                        break;
+                    js_style_cert = js_style_cert + l + '\\n" + "'
+                js_style_cert = js_style_cert + last_line + '");'
+            with open("pinning.js", 'r') as pinning:
+                lines = pinning.readlines()
+                lines[27] = '\t' + js_style_cert + '\n'
+                return lines;
+
+
+    def generate_pinning_script(self, renew = False):
+        """
+        This function modify on the fly the pinning script for frida with the given trusted cert
+
+        Parameters
+        ----------
+        renew
+            Regenerate the pinning script, generally used if you have changed the cert or reinstalled mitmproxy
+        """
+        cert_path = input("Enter mitmproxy folder path: ")
+        if renew:
+            lines = self._gen_js_cert_(cert_path)
+            with open('pinning.js', 'r+') as pinning:
+                pinning.seek(0)
+                pinning.truncate()
+                pinning.writelines(lines)
+                print("Pinner renewed")
+                return True
+        else:
+            lines = self._gen_js_cert_(cert_path)
+            with open('pinning.js','r+') as pinning:
+                created = False
+                for l in pinning.readlines():
+                    if l.find('var cert =') != -1:
+                        print("Pinner already created!")
+                        created = True
+                if not created:
+                    #with open('pinning.js', 'w'): pass
+                    pinning.seek(0)
+                    pinning.truncate()
+                    pinning.writelines(lines)
+                    print("Pinner created")
+                return True
 
     @staticmethod
     def inject(libdir, arch, selected_library):
@@ -141,7 +193,10 @@ class PhoneTool:
         try:
             f = open(apk, 'r+')
         except:
-            print("[+] I did not find the file at, " + str(apk))
+            if apk:
+                print("[+] I did not find the file at, " + str(apk))
+            else:
+                print("Error retrieving apk")
             exit()
 
         f = open(apk, 'r+')
@@ -226,7 +281,6 @@ class PhoneTool:
                 print(keystore_gen)
         else:
             print("You already have a keystore, if it's not working try to refactor it...")
-        time.sleep(3)
         print("Proceeding signing APK")
         sign = send_cmd("jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore my-release-key.keystore base_" + self.package_name + "_infected.apk alias_name", True)
         if sign:
@@ -253,7 +307,7 @@ class PhoneTool:
         """
         This method waits untill the infected app is ready and open on the phone and starts the frida hooking for SSL pinning bypass
         """
-        #todo try to star the app from here
+        #todo try to start the app from here
         print("Start the app on the phone...")
         pid = False
         while not pid:

@@ -144,7 +144,7 @@ class MitmSniffer:
             print("Sorry, the program has some problems in setting up the propers network options!")
             sys.exit(1)
 
-        if send_cmd('SSLKEYLOGFILE="$PWD/mitmproxy/sslkeylogfile.txt"  mitmproxy --mode transparent --showhost', output_needed=False, new_shell=True):
+        if send_cmd('SSLKEYLOGFILE="$PWD/mitmproxy/sslkeylogfile.txt" mitmproxy --mode transparent --showhost', output_needed=False, new_shell=True):
             print("Mitmproxy started correctly")
             return True
 

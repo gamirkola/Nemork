@@ -1,5 +1,3 @@
-// start with:
-//   frida -U -l pinning_notw.js -f [APP_ID] --no-pause
 
 Java.perform(function () {
     console.log('')
@@ -8,25 +6,55 @@ Java.perform(function () {
     console.log('===')
 
     var X509TrustManager = Java.use('javax.net.ssl.X509TrustManager');
-    var SSLContext = Java.use('javax.net.ssl.SSLContext');
 
-    // build fake trust manager
-    var TrustManager = Java.registerClass({
-        name: 'com.sensepost.test.TrustManager',
-        implements: [X509TrustManager],
-        methods: {
-            checkClientTrusted: function (chain, authType) {
-            },
-            checkServerTrusted: function (chain, authType) {
-            },
-            getAcceptedIssuers: function () {
-                return [];
-            }
-        }
-    });
+    console.log("");
+    console.log("[.] Cert Pinning Bypass");
 
-    // pass our own custom trust manager through when requested
-    var TrustManagers = [TrustManager.$new()];
+    var CertificateFactory = Java.use("java.security.cert.CertificateFactory");
+    var FileInputStream = Java.use("java.io.FileInputStream");
+    var X509Certificate = Java.use("java.security.cert.X509Certificate");
+    var KeyStore = Java.use("java.security.KeyStore");
+    var TrustManagerFactory = Java.use("javax.net.ssl.TrustManagerFactory");
+    var SSLContext = Java.use("javax.net.ssl.SSLContext");
+    var String = Java.use("java.lang.String");
+    var ByteArrayInputStream = Java.use("java.io.ByteArrayInputStream");
+
+    // Load CAs from an InputStream
+    console.log("[+] Genrating custom CA from mitmproxy cert.")
+    var cf = CertificateFactory.getInstance("X.509");
+
+    //place for the crt
+
+
+
+	var byteArrayInputStream = ByteArrayInputStream.$new(cert.getBytes());
+	var ca = cf.generateCertificate(byteArrayInputStream);
+	byteArrayInputStream.close();
+
+    var certInfo = Java.cast(ca, X509Certificate);
+    console.log("[o] Info about our CA : " + certInfo.getSubjectDN());
+
+    // Create a KeyStore containing our trusted CAs
+    console.log("[+] Creating a KeyStore for our CA...");
+    var keyStoreType = KeyStore.getDefaultType();
+    var keyStore = KeyStore.getInstance(keyStoreType);
+    keyStore.load(null, null);
+    keyStore.setCertificateEntry("ca", ca);
+
+    // Create a TrustManager that trusts the CAs in our KeyStore
+    console.log("[+] Creating a TrustManager that trusts the CA in our KeyStore...");
+    var tmfAlgorithm = TrustManagerFactory.getDefaultAlgorithm();
+    var tmf = TrustManagerFactory.getInstance(tmfAlgorithm);
+    tmf.init(keyStore);
+    console.log("[+] Our TrustManager is ready...");
+
+    console.log("[+] Hijacking SSLContext methods now...");
+    console.log("[-] Waiting for the app to invoke SSLContext.init()...");
+
+
+    var TrustManager = tmf;
+    var TrustManagers = TrustManager.getTrustManagers();
+    //pass our own custom trust manager through when requested
     var SSLContext_init = SSLContext.init.overload(
         '[Ljavax.net.ssl.KeyManager;', '[Ljavax.net.ssl.TrustManager;', 'java.security.SecureRandom'
     );
@@ -34,8 +62,6 @@ Java.perform(function () {
         console.log('! Intercepted trustmanager request');
         SSLContext_init.call(this, keyManager, TrustManagers, secureRandom);
     };
-
-    console.log('* Setup custom trust manager');
 
     // okhttp3
     try {

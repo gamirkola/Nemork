@@ -42,7 +42,7 @@ program is executed, like iptables and the main API for Shodan and VirusTotal</p
 <em class="property">class </em><code class="sig-prename descclassname">mitm_sniffer.</code><code class="sig-name descname">MitmSniffer</code><span class="sig-paren">(</span><em class="sig-param">filter</em>, <em class="sig-param">interface</em>, <em class="sig-param">file_name</em><span class="sig-paren">)</span><a class="headerlink" href="#mitm_sniffer.MitmSniffer" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="simple">
 <dt>MitmSniffer class:</dt><dd><dl class="simple">
-<dt>-filter:</dt><dd><p>define what tcpdump like filter you want to implement</p>
+<dt>-filter:</dt><dd><p>define what BPF like filter you want to implement</p>
 </dd>
 <dt>-interface:</dt><dd><p>on which interface you want to work</p>
 </dd>
@@ -77,8 +77,14 @@ VirusTotal report like json</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="mitm_sniffer.MitmSniffer.mitmproxy_starter">
+<code class="sig-name descname">mitmproxy_starter</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mitm_sniffer.MitmSniffer.mitmproxy_starter" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function starts mitmproxy setting the correct net options</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="mitm_sniffer.MitmSniffer.packets_analysis">
-<code class="sig-name descname">packets_analysis</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mitm_sniffer.MitmSniffer.packets_analysis" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">packets_analysis</code><span class="sig-paren">(</span><em class="sig-param">pcap_file=None</em><span class="sig-paren">)</span><a class="headerlink" href="#mitm_sniffer.MitmSniffer.packets_analysis" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return True if all the scans with VirusTotal and shodan API have success. It creates the report of virus total in JSON format
 in the root of the program, then saves the other results in vt_url_report and shodan_report folder shodan results</p>
 </dd></dl>
@@ -108,7 +114,7 @@ list of the class</p></li>
 <dl class="method">
 <dt id="mitm_sniffer.MitmSniffer.start_sniffing">
 <code class="sig-name descname">start_sniffing</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mitm_sniffer.MitmSniffer.start_sniffing" title="Permalink to this definition">¶</a></dt>
-<dd><p>This function initializes the async sniffing of the traffic that comes from the selected ip
+<dd><p>This function initializes the async sniffing of the traffic that comes from the selected filter
 then sets the net options calling the relative function and starts mitmproxy</p>
 </dd></dl>
 
@@ -126,8 +132,7 @@ using all the things needed to inject a cert in an app to bypass ssl pinning usi
 <dt>PhoneTool class:</dt><dd><dl class="simple">
 <dt>-app_name:</dt><dd><p>define the name of the app that you want to inject</p>
 </dd>
-<dt>-ip:</dt><dd><p>if the phone using adb via network, you can provide an ip address, at the moment this is not implemeted yet:
-on which interface you want to work</p>
+<dt>-ip:</dt><dd><p>if the phone using adb via network, you can provide an ip address, at the moment this is not implemeted yet</p>
 </dd>
 </dl>
 </dd>
@@ -149,6 +154,17 @@ and creates a new infected APK ready to be signed</p>
 <dt id="phone_tool.PhoneTool.frida_starter">
 <em class="property">static </em><code class="sig-name descname">frida_starter</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phone_tool.PhoneTool.frida_starter" title="Permalink to this definition">¶</a></dt>
 <dd><p>This method waits untill the infected app is ready and open on the phone and starts the frida hooking for SSL pinning bypass</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="phone_tool.PhoneTool.generate_pinning_script">
+<code class="sig-name descname">generate_pinning_script</code><span class="sig-paren">(</span><em class="sig-param">renew=False</em><span class="sig-paren">)</span><a class="headerlink" href="#phone_tool.PhoneTool.generate_pinning_script" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function modify on the fly the pinning script for frida with the given trusted cert</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>renew</strong> – Regenerate the pinning script, generally used if you have changed the cert or reinstalled mitmproxy</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">

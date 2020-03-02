@@ -23,6 +23,7 @@ def initialize_mitm_sniffer():
     sn = MitmSniffer(filter, interface, file_name)
     return sn;
 
+
 def analyze_packets(sn = None):
     analyze = input("[+] Do you want to make a vulnerability check on the sniffed packets? (y/n): ")
     if analyze == "y":
@@ -30,6 +31,7 @@ def analyze_packets(sn = None):
             sn.packets_analysis()
         else:
             print("Error in analyzing packets!")
+
 
 if __name__ == '__main__':
     f = Figlet(font='univers')

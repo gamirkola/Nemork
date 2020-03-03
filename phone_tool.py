@@ -122,7 +122,6 @@ class PhoneTool:
                         print("Pinner already created!")
                         created = True
                 if not created:
-                    #with open('pinning.js', 'w'): pass
                     pinning.seek(0)
                     pinning.truncate()
                     pinning.writelines(lines)

@@ -20,7 +20,7 @@ def initialize_mitm_sniffer():
     interface = interfaces[int(interface)]
     file_name = input("[+] Insert the name of the pcap file where the packets sniffed will be saved: ")
     print("[*] Initializing the sniffing...")
-    sn = MitmSniffer(filter, interface, file_name)
+    sn = MitmSniffer(filter, interface, file_name + ".pcap")
     return sn;
 
 
@@ -37,7 +37,7 @@ if __name__ == '__main__':
     f = Figlet(font='univers')
     print(f.renderText('Nemork'))
     print("Welcome!!!")
-    enable_phone_function = input("[+] Do you want to use Nemork with a phone? (y/n): ")
+    enable_phone_function = input("[+] Do you want to use Nemork with phone app injection function? (y/n): ")
     if enable_phone_function == 'y':
         print("[*] starting phone tool functionality...")
         app = input("insert the name of the app you want to inject: ")

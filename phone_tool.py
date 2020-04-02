@@ -12,12 +12,8 @@ import lief
 import zipfile
 import shutil
 import tempfile
-import os
-import pathlib
-import requests
-import re
+import os, pathlib, requests, re
 from xtract import xtract
-import time
 
 '''main android architectures'''
 gadget_architecture = {
@@ -73,7 +69,7 @@ class PhoneTool:
         """
         Will be needed for rooted devices, freda needs that for hooking the certificate in the apps
         """
-        cert_path = input("Enter mitmproxy folder path: ")
+        cert_path = input("Enter mitmprox_y folder path: ")
         inj = "adb push " + cert_path + "mitmproxy-ca-cert.cer /data/local/tmp/cert-der.crt"
         print(send_cmd(inj, output_needed=True))
 
@@ -284,6 +280,9 @@ class PhoneTool:
         sign = send_cmd("jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore my-release-key.keystore base_" + self.package_name + "_infected.apk alias_name", True)
         if sign:
             print(sign)
+            return True
+        else:
+            return False
 
     def pusher(self):
         """

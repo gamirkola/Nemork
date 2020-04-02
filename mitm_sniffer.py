@@ -196,7 +196,7 @@ class MitmSniffer:
 
         except Exception as e:
             print('Error: {}'.format(e))
-            sys.exit(1)
+            return False
         return True
 
     def packets_analysis(self, pcap_file = None):

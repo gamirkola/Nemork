@@ -1,7 +1,7 @@
 '''THIS CLASS CONTAINS ONLY GENERAL FUNCTION USED BY THE OTHER CLASSES'''
 import json
 import subprocess
-
+import sys, re
 
 
 '''terminal command send function'''
@@ -41,12 +41,22 @@ def cmp(a, b):
 
 
 def json_writer(file_name, json_obj):
+
     if file_name.find(".json") == -1:
         file_name = file_name + ".json"
 
     with open(file_name, 'w') as outfile:
         json.dump(json_obj, outfile, indent=4, sort_keys=True)
         return True
+
+def standardize_to_json(response):
+    print(response)
+    try:  # try parsing to dict
+        resp_parsed = re.sub(r'^jsonp\d+\(|\)\s+$', '', response.text)
+        data = json.loads(resp_parsed)
+        return data
+    except:
+        print('Error during conversion to standard json!')
 
 
 def concatenate_list_data(list):

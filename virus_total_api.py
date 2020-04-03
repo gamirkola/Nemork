@@ -1,12 +1,10 @@
 import os
 import requests
 
-API_KEY_VIRUS_TOTAL = os.getenv("API_KEY_VIRUS_TOTAL")
-
 class VirusTotalApi:
 
     def __init__(self):
-        self.api_key = API_KEY_VIRUS_TOTAL
+        self.api_key = os.getenv("API_KEY_VIRUS_TOTAL")
         self.file_url = 'https://www.virustotal.com/vtapi/v2/file/'
         self.domain_url = 'https://www.virustotal.com/vtapi/v2/url/'
         self.params = {'apikey': self.api_key}

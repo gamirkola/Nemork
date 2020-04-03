@@ -35,7 +35,7 @@ class PhoneTool:
                 if the phone using adb via network, you can provide an ip address, at the moment this is not implemeted yet
     """
 
-    def __init__(self, app_name, ip=None):
+    def __init__(self, app_name=None, ip=None):
         self.app_name = app_name
         self.package_name = ''
         if ip:

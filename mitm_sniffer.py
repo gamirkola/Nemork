@@ -11,7 +11,7 @@ from tqdm import tqdm
 from shodan import Shodan
 from virus_total_api import VirusTotalApi
 import sys, os, requests, keyboard, settings
-from utils import send_cmd, json_writer
+from utils import send_cmd, json_writer, standardize_to_json
 
 
 load_layer("http")
@@ -34,7 +34,7 @@ class MitmSniffer:
                internal packet list
     """
 
-    def __init__(self, filter, interface, file_name):
+    def __init__(self, filter=None, interface=None, file_name=None):
         self.filter = filter
         self.interface = interface
         self.file_name = file_name
@@ -233,7 +233,7 @@ class MitmSniffer:
         evidence = self.evidence_extractor(report_ok.json())
         try:
             json_writer("evidence", evidence)
-            print("See the dir for a complete report fo the relevated evidence!")
+            print("See the dir for a complete report for the relevated evidence!")
         except Exception as e:
             print("Error: {}".format(e))
 

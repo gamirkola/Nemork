@@ -27,10 +27,13 @@ def initialize_mitm_sniffer():
 def analyze_packets(sn = None):
     analyze = input("[+] Do you want to make a vulnerability check on the sniffed packets? (y/n): ")
     if analyze == "y":
+        print("sono qui:", sn)
         if sn:
             sn.packets_analysis()
         else:
             print("Error in analyzing packets!")
+    else:
+        print('Thanks for using Nemork!')
 
 
 if __name__ == '__main__':

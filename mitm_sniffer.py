@@ -11,7 +11,7 @@ from tqdm import tqdm
 from shodan import Shodan
 from virus_total_api import VirusTotalApi
 import sys, os, requests, keyboard, settings
-from utils import send_cmd, json_writer, standardize_to_json
+from utils import send_cmd, json_writer
 
 
 load_layer("http")

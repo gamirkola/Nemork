@@ -1,28 +1,11 @@
 from mitm_sniffer import MitmSniffer
-from phone_tool import PhoneTool
 
-#select the app
-#app = input("insert the name of the app you want to inject: ")
-#initialize a PhoneTool class with the selected app
-#pn = PhoneTool(app.strip())
-#pn.generate_pinning_script(renew=True)
-#copy in a readable folder the apk
-#pkg = pn.select_package()
-#inject the frida gadget in the app
-#pn.apk_operation(pkg)
-#inject our cert in the phone
-# pn.inject_mitm_cert()
-#sign the infected app
-#pn.signer()
-#push the new app in the phone
-#pn.pusher()
-#initialize the MitmSniffer
+#instantiate the class
 sn = MitmSniffer()
-#start frida for ssl pinning
-#pn.frida_starter()
-#start mitmproxy
-#sn.mitmproxy_starter()
-#start tcpdump like sniff implemented with scapy
-#sn.start_sniffing()
-# analize the packets with virus total an shodan
-sn.packets_analysis('test_4.pcap')
+
+# analize the packets with VirusTotal an Shodan
+sn.packets_analysis('test.pcap')
+
+
+
+

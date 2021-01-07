@@ -24,7 +24,7 @@ ipaddress==1.0.23
 itsdangerous==0.24
 Jinja2==2.10
 lief==0.9.0
-lxml==4.3.2
+lxml==4.6.2
 Markdown==3.0.1
 MarkupSafe==1.1.0
 numpy==1.16.2

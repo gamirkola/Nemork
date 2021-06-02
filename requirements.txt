@@ -57,7 +57,7 @@ sphinxcontrib-websupport==1.1.2
 touchpad-indicator==1.1.0
 ttystatus==0.38
 typing==3.7.4.1
-urllib3==1.24.3
+urllib3==1.26.5
 urwid==2.0.1
 vboxapi==1.0
 wcwidth==0.1.7

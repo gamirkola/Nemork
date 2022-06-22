@@ -27,7 +27,7 @@ lief==0.9.0
 lxml==4.3.2
 Markdown==3.0.1
 MarkupSafe==1.1.0
-numpy==1.16.2
+numpy==1.22.0
 packaging==19.2
 packettotal-sdk==0.2
 Pillow==3.4.2
